@@ -1,0 +1,28 @@
+<mxfile modified="2024-07-23T14:16:14.132Z" host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.4.8 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" etag="rV4kszrgnbJYN8NtcBYI" version="24.4.8" type="device">
+  <diagram id="l8hXMBHkgcEJcSW0mbfh" name="Page-1">
+    <mxGraphModel dx="1434" dy="844" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Z_KggfYLNCUlmv5fKUu6-1" value="Login" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="320" width="120" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="Z_KggfYLNCUlmv5fKUu6-2" value="Principal" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="320" width="120" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="Z_KggfYLNCUlmv5fKUu6-3" value="Lista de&amp;nbsp;&lt;div&gt;operaciones&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="320" width="120" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="Z_KggfYLNCUlmv5fKUu6-4" value="Operacion" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="320" width="120" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="Z_KggfYLNCUlmv5fKUu6-6" value="Mapa" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="40" width="120" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="Z_KggfYLNCUlmv5fKUu6-7" value="Mapa" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="40" width="120" height="240" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
