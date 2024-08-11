@@ -4,34 +4,36 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 
-data class GruposResponse(
+data class Grupo(
     val inspeccion: Int,
     val tecnicoId: Int,
     val cantidad: Int
 )
 
-data class DetalleResponse(
-    val ID: Int,
-    val Contrato: Int,
-    val Medidor: Int,
-    val Nombres: String,
-    val Direccion: String,
-    val InspeccionId: Int,
+data class Detalle(
+    val id: Int,
+    val contrato: Int,
+    val medidor: Int,
+    val nombres: String,
+    val direccion: String,
+    val inspeccionId: Int,
     val latitud: Double,
     val longitud: Double,
-    val TecnicoAsignado: Int
+    val tecnicoAsignado: Int
 )
 
 
-interface GruposService {
+interface GruposApi {
     @GET("api/InspeccionesGrupo/Index")
-    suspend fun grupos(
+    suspend fun getGrupos(
         @Query("login") login: String,
-    ):  List<GruposResponse>
+    ):  List<Grupo>
+}
 
+interface DetalleApi {
     @GET("api/InspeccionesDetalle/Index")
-    suspend fun detalle(
+    suspend fun getDetalles(
         @Query("login") login: String,
         @Query("inspeccionid") inspeccionid: Int,
-    ):  List<DetalleResponse>
+    ):  List<Detalle>
 }

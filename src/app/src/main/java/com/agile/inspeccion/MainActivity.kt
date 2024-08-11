@@ -1,7 +1,6 @@
 package com.agile.inspeccion
 
-import android.app.Application
-import android.content.res.Configuration
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,11 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-
-
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -41,6 +36,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -71,42 +67,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agile.inspeccion.data.database.DatabaseHelper
-import com.agile.inspeccion.data.database.Grupo
+
 import com.agile.inspeccion.data.model.GruposViewModel
 import com.agile.inspeccion.data.model.LoginViewModel
-import com.agile.inspeccion.data.service.GruposResponse
-import com.agile.inspeccion.ui.theme.AppTheme
-import kotlinx.coroutines.launch
-import com.agile.inspeccion.ui.theme.AppTheme
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.agile.inspeccion.data.service.Grupo
 
-class MyApplication : Application() {
-    lateinit var databaseHelper: DatabaseHelper
 
-    override fun onCreate() {
-        super.onCreate()
-        databaseHelper = DatabaseHelper(this)
-    }
-}
-
-class ViewModelFactory(private val dbHelper: DatabaseHelper) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(GruposViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return GruposViewModel(dbHelper) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
 
 class MainActivity : ComponentActivity() {
-    private lateinit var viewModel: GruposViewModel
-
+    //private lateinit var viewModel: GruposViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,15 +94,11 @@ class MainActivity : ComponentActivity() {
             login = bundle.getString("login", "")
         }
 
-        val dbHelper = DatabaseHelper(applicationContext)
-        val viewModelFactory = ViewModelFactory(dbHelper)
+        val databaseHelper = DatabaseHelper(this)
 
         enableEdgeToEdge()
         setContent {
-
-            val viewModel: GruposViewModel = viewModel(factory = viewModelFactory)
-
-
+            val viewModel: GruposViewModel = viewModel { GruposViewModel(databaseHelper) }
             MainScreen(nombre, login, viewModel)
         }
     }
@@ -136,18 +107,9 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(nombre: String, login: String, gruposModel: GruposViewModel) {
-    val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-
-    //val gruposModel: GruposViewModel = viewModel()
-    val isLoading by gruposModel.isLoading.collectAsStateWithLifecycle()
-    val gruposResult by gruposModel.gruposResult.collectAsStateWithLifecycle()
-
-
-
-
-
+    val grupos by gruposModel.grupos.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -170,30 +132,15 @@ fun MainScreen(nombre: String, login: String, gruposModel: GruposViewModel) {
                         DropdownMenuItem(
                             text = { Text("Descargar Inspecciones") },
                             onClick = {
+                                gruposModel.cargarDatos()
                                 showMenu = false
-                                //showLoadingDialog = true
-                                scope.launch {
-                                    try {
-                                        //viewModel.performPostAction()
-                                        gruposModel.GetGrupos(login)
-                                    } finally {
-                                        //showLoadingDialog = false
-                                    }
-                                }
                             }
                         )
                         DropdownMenuItem(
                             text = { Text("Borrar Inspecciones") },
                             onClick = {
+                                gruposModel.DeleteAll()
                                 showMenu = false
-                                scope.launch {
-                                    try {
-                                        //viewModel.performPostAction()
-                                        gruposModel.DeleteGruposDB()
-                                    } finally {
-                                        //showLoadingDialog = false
-                                    }
-                                }
                             }
                         )
                         /*DropdownMenuItem(
@@ -230,36 +177,56 @@ fun MainScreen(nombre: String, login: String, gruposModel: GruposViewModel) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
-                itemsIndexed(gruposResult) { _, item ->
+                itemsIndexed(grupos) { _, item ->
                     ListItem(item) {
-                        /*val intent = Intent(context, DetalleLibro::class.java).apply {
-                            putExtra("Grupo: ", item)
+                        val intent = Intent(context, ListActivity::class.java).apply {
+                            putExtra("inspeccion", item.inspeccion)
                         }
-                        context.startActivity(intent)*/
+                        context.startActivity(intent)
                     }
                 }
             }
         }
     }
 
-    if (isLoading) {
-        AlertDialog(
-            onDismissRequest = { },
-            title = { Text("Cargando") },
-            text = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    Text("Procesando solicitud...")
-                }
-            },
-            confirmButton = { }
-        )
+    if (gruposModel.showDownloadDialog) {
+        DownloadDialog(gruposModel)
     }
-    else{
+}
 
+@Composable
+fun DownloadDialog(viewModel: GruposViewModel) {
+    Dialog(onDismissRequest = { /*if (!viewModel.isLoading) viewModel.dismissDownloadDialog() */}) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+            ,
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 8.dp
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Descarga de datos",
+                    style = MaterialTheme.typography.bodySmall
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LinearProgressIndicator(
+                    progress = viewModel.downloadProgress,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(viewModel.downloadStatus)
+            }
+        }
     }
 }
 
@@ -269,16 +236,11 @@ fun ListItem(grupo: Grupo, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clickable(onClick = onClick)
-        ,
-        //.background(color = MaterialTheme.colorScheme.primary),
-        //elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .clickable(onClick = onClick),
         border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-
-
+        )
         ) {
         Column() {
             Text(

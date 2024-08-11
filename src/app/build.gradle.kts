@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+
 }
 
 android {
@@ -68,6 +69,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.lifecycle.compose)
     implementation(libs.androidx.lifecycle.runtime.compose.android)
+    implementation(libs.play.services.maps)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

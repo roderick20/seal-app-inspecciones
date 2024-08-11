@@ -2,7 +2,7 @@ package com.agile.inspeccion.data.model
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.agile.inspeccion.data.service.LoginService
+import com.agile.inspeccion.data.service.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -26,22 +26,13 @@ class LoginViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
-    private val apiService: LoginService
 
-    init {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://operacionessealapi.seal.com.pe/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        apiService = retrofit.create(LoginService::class.java)
-    }
 
     fun login(usuario: String, password: String, deviceId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = apiService.login(usuario, password, deviceId)
+                val response = RetrofitClient.loginApi.login(usuario, password, deviceId)
                 _loginResult.value = response.estado
                  if (response.estado) {
                      _login.value = response.login

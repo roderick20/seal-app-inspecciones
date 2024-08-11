@@ -5,7 +5,171 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.agile.inspeccion.data.service.Detalle
+import com.agile.inspeccion.data.service.Grupo
 
+class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+    companion object {
+        private const val DATABASE_NAME = "biblioteca1.db"
+        private const val DATABASE_VERSION = 1
+    }
+
+    override fun onCreate(db: SQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE grupo (
+                inspeccion INTEGER,
+                tecnicoId INTEGER,
+                cantidad INTEGER
+            )
+        """)
+
+        db.execSQL("""
+            CREATE TABLE detalle (
+                id INTEGER,
+                contrato INTEGER,
+                medidor INTEGER,
+                nombres TEXT,
+                direccion TEXT,
+                inspeccionId INTEGER,
+                latitud REAL,
+                longitud REAL,
+                tecnicoAsignado INTEGER                
+            )
+        """)
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        db.execSQL("DROP TABLE IF EXISTS grupo")
+        db.execSQL("DROP TABLE IF EXISTS detalle")
+        onCreate(db)
+    }
+
+    fun insertGrupo(grupo: Grupo) {
+        writableDatabase.use { db ->
+            db.execSQL("INSERT INTO grupo (inspeccion, tecnicoId, cantidad) VALUES (?, ?, ?)",
+                arrayOf(grupo.inspeccion, grupo.tecnicoId, grupo.cantidad))
+        }
+    }
+
+    fun getAllGrupo(): List<Grupo> {
+        val grupoList = mutableListOf<Grupo>()
+        val selectQuery = "SELECT * FROM grupo"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+        cursor.use {
+            if (it.moveToFirst()) {
+                do {
+                    val grupo = Grupo(
+                        it.getInt(it.getColumnIndexOrThrow("inspeccion")),
+                        it.getInt(it.getColumnIndexOrThrow("tecnicoId")),
+                        it.getInt(it.getColumnIndexOrThrow("cantidad"))
+                    )
+                    grupoList.add(grupo)
+                } while (it.moveToNext())
+            }
+        }
+        return grupoList
+    }
+
+    fun insertDetalle(detalle: Detalle) {
+        writableDatabase.use { db ->
+            db.execSQL("INSERT INTO detalle (id, contrato, medidor, nombres, direccion, inspeccionId, latitud, longitud, tecnicoAsignado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                arrayOf(detalle.id, detalle.contrato, detalle.medidor, detalle.nombres, detalle.direccion, detalle.inspeccionId, detalle.latitud, detalle.longitud, detalle.tecnicoAsignado))
+        }
+    }
+
+    fun deleteAllGrupo(): Int {
+        val db = this.writableDatabase
+        return db.delete("grupo", null, null)
+    }
+
+    fun deleteAllDetalle(): Int {
+        val db = this.writableDatabase
+        return db.delete("detalle", null, null)
+    }
+
+    fun getDetalleByInspeccionId(inspeccionId: Int): List<Detalle> {
+        val operacionList = mutableListOf<Detalle>()
+        val selectQuery = "SELECT * FROM Detalle WHERE inspeccionId = ?"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, arrayOf(inspeccionId.toString()))
+        cursor.use {
+            if (it.moveToFirst()) {
+                do {
+                    val operacion = Detalle(
+                        it.getInt(it.getColumnIndexOrThrow( "id")),
+                        it.getInt(it.getColumnIndexOrThrow("contrato")),
+                        it.getInt(it.getColumnIndexOrThrow("medidor")),
+                        it.getString(it.getColumnIndexOrThrow("nombres")),
+                        it.getString(it.getColumnIndexOrThrow("direccion")),
+                        it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
+                        it.getDouble(it.getColumnIndexOrThrow("latitud")),
+                        it.getDouble(it.getColumnIndexOrThrow("longitud")),
+                        it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado"))
+                    )
+                    operacionList.add(operacion)
+                } while (it.moveToNext())
+            }
+        }
+        return operacionList
+    }
+
+    fun getDetalleById(id: Int): Detalle? {
+
+        val selectQuery = "SELECT * FROM Detalle WHERE id = ?"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, arrayOf(id.toString()))
+        return cursor.use {
+            if (it.moveToFirst()) {
+
+                     Detalle(
+                        it.getInt(it.getColumnIndexOrThrow( "id")),
+                        it.getInt(it.getColumnIndexOrThrow("contrato")),
+                        it.getInt(it.getColumnIndexOrThrow("medidor")),
+                        it.getString(it.getColumnIndexOrThrow("nombres")),
+                        it.getString(it.getColumnIndexOrThrow("direccion")),
+                        it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
+                        it.getDouble(it.getColumnIndexOrThrow("latitud")),
+                        it.getDouble(it.getColumnIndexOrThrow("longitud")),
+                        it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado"))
+                    )
+
+
+            }
+            else null
+        }
+
+    }
+
+    fun search(column: String, search: String): List<Detalle> {
+        val operacionList = mutableListOf<Detalle>()
+        val selectQuery = "SELECT * FROM Detalle WHERE ${column} like '%${search}%'"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, arrayOf())
+        cursor.use {
+            if (it.moveToFirst()) {
+                do {
+                    val operacion = Detalle(
+                        it.getInt(it.getColumnIndexOrThrow( "id")),
+                        it.getInt(it.getColumnIndexOrThrow("contrato")),
+                        it.getInt(it.getColumnIndexOrThrow("medidor")),
+                        it.getString(it.getColumnIndexOrThrow("nombres")),
+                        it.getString(it.getColumnIndexOrThrow("direccion")),
+                        it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
+                        it.getDouble(it.getColumnIndexOrThrow("latitud")),
+                        it.getDouble(it.getColumnIndexOrThrow("longitud")),
+                        it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado"))
+                    )
+                    operacionList.add(operacion)
+                } while (it.moveToNext())
+            }
+        }
+        return operacionList
+    }
+
+
+}
+/*
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
@@ -249,15 +413,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return db.delete(TABLE_OPERACION, "$KEY_ID = ?", arrayOf(id.toString()))
     }
 
-    fun deleteAllGrupos(): Int {
-        val db = this.writableDatabase
-        return db.delete(TABLE_GRUPO, null, null)
-    }
 
-    fun deleteAllOperaciones(): Int {
-        val db = this.writableDatabase
-        return db.delete(TABLE_OPERACION, null, null)
-    }
 }
 
 data class Grupo(
@@ -278,3 +434,4 @@ data class Operacion(
     val latitud: Double,
     val longitud: Double
 )
+*/
