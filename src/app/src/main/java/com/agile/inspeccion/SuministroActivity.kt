@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -63,6 +64,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,6 +94,8 @@ import androidx.core.content.ContextCompat
 //import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.agile.inspeccion.data.database.DatabaseHelper
 import com.agile.inspeccion.data.model.DetalleImagen
 import com.agile.inspeccion.data.model.SuministroModel
@@ -102,6 +106,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.coroutines.launch
 //import java.io.File
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -114,7 +119,7 @@ import java.util.Locale
 
 data class ObservacionOption(val id: Int, val nombre: String)
 
-class SuministroActivity : ComponentActivity() {
+/*class SuministroActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         var id = 0
@@ -130,24 +135,27 @@ class SuministroActivity : ComponentActivity() {
             }
         }
     }
-}
+}*/
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SuministroInterface(id: Int, viewModel: SuministroModel) {
+fun SuministroInterface(navController: NavController, id: Int, viewModel: SuministroModel) {
 
     val detalle by viewModel.detalle.collectAsStateWithLifecycle()
     val lectura by viewModel.lectura.collectAsStateWithLifecycle()
     val observacion by viewModel.observacion.collectAsStateWithLifecycle()
     val fotoTipo by viewModel.fotoTipo.collectAsStateWithLifecycle()
-
-
     val context = LocalContext.current
-
-
-
-
     viewModel.GetDetalleById(id)
+
+    val coroutineScope = rememberCoroutineScope()
+    BackHandler {
+        coroutineScope.launch {
+            navController.navigate("list/" + detalle!!.inspeccionId.toString())
+        }
+    }
+
+
 
     var showMapDialog by remember { mutableStateOf(false) }
 
@@ -400,7 +408,9 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
                 Button(
                     //contentPadding = PaddingValues(all = 1.dp),
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.weight(0.1f).height(32.dp),
+                    modifier = Modifier
+                        .weight(0.1f)
+                        .height(32.dp),
                     onClick = { showObservacionDialog = true },
                     //modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
@@ -510,10 +520,11 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
                         Toast.makeText(context, "Lectura grabada", Toast.LENGTH_SHORT).show()
 
                         var siguiente = viewModel.siguiente(detalle!!.id)
-                        val intent = Intent(context, SuministroActivity::class.java).apply {
+                        /*val intent = Intent(context, SuministroActivity::class.java).apply {
                             putExtra("id", siguiente!!.id)
                         }
-                        context.startActivity(intent)
+                        context.startActivity(intent)*/
+                        navController.navigate("suministro/" + siguiente!!.id.toString())
 
                     },
 
@@ -543,7 +554,9 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
                         )
                         IconButton(
                             onClick = { viewModel.eliminarImagen(bitmap) },
-                            modifier = Modifier.align(Alignment.TopEnd).padding(horizontal = 5.dp)
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(horizontal = 5.dp)
                         ) {
                             Icon(
                                 Icons.Default.Delete,
@@ -742,7 +755,8 @@ fun ObservacionDialog(
 @Composable
 fun SuministroPreview() {
     val previewViewModel = SuministroModel(DatabaseHelper(LocalContext.current))
+    val navController = rememberNavController()
     AppTheme {
-        SuministroInterface( 1, previewViewModel )
+        SuministroInterface( navController,1, previewViewModel )
     }
 }

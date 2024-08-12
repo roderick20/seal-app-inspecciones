@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -54,6 +55,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +77,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.agile.inspeccion.data.database.DatabaseHelper
 import com.agile.inspeccion.data.model.ListModel
 import com.agile.inspeccion.data.model.SuministroModel
@@ -84,7 +87,9 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.coroutines.launch
 
+/*
 class ListActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,7 +106,7 @@ class ListActivity : ComponentActivity() {
             }
         }
     }
-}
+}*/
 
 fun removeNonNumeric(input: String?): String {
     return input?.replace(Regex("[^0-9]"), "") ?: ""
@@ -109,7 +114,7 @@ fun removeNonNumeric(input: String?): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetalleLibroScreen(inspeccion: Int, viewModel: ListModel) {
+fun DetalleLibroScreen(navController: NavController, inspeccion: Int, viewModel: ListModel) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
     val detalles by viewModel.detalles.collectAsStateWithLifecycle()
@@ -119,6 +124,13 @@ fun DetalleLibroScreen(inspeccion: Int, viewModel: ListModel) {
     var selectedOption by remember { mutableStateOf("") }
     var measurement1 by remember { mutableStateOf("") }
     var showMapDialog by remember { mutableStateOf(false) }
+
+    val coroutineScope = rememberCoroutineScope()
+    BackHandler {
+        coroutineScope.launch {
+            navController.navigate("MainScreen")
+        }
+    }
 
     val speechRecognizer = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -319,10 +331,11 @@ fun DetalleLibroScreen(inspeccion: Int, viewModel: ListModel) {
             ) {
                 itemsIndexed(detalles) { _, item ->
                     ListItem1(item) {
-                        val intent = Intent(context, SuministroActivity::class.java).apply {
+                        /*val intent = Intent(context, SuministroActivity::class.java).apply {
                             putExtra("id", item.id)
                         }
-                        context.startActivity(intent)
+                        context.startActivity(intent)*/
+                        navController.navigate("suministro/" + item.id.toString())
                     }
                 }
             }
@@ -412,7 +425,7 @@ fun ListItem1(item: Detalle, onClick: () -> Unit) {
         }
     }
 }
-
+/*
 @Preview(showBackground = true)
 @Composable
 fun ListPreview() {
@@ -420,4 +433,4 @@ fun ListPreview() {
     AppTheme {
         DetalleLibroScreen(1, previewViewModel)
     }
-}
+}*/
