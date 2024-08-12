@@ -61,7 +61,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
                 downloadStatus = "Descarga completada"
                 downloadProgress = 1f
                 GetAllGrupo()
-                delay(1500)
+                delay(500)
             } catch (e: Exception) {
                 downloadStatus = "Error: ${e.localizedMessage}"
             } finally {

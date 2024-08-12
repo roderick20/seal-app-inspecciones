@@ -1,12 +1,16 @@
 package com.agile.inspeccion
 
 //import android.content.Context
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.location.Location
 import android.os.Bundle
 import android.os.Parcelable
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -83,19 +87,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 //import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.agile.inspeccion.data.database.DatabaseHelper
+import com.agile.inspeccion.data.model.DetalleImagen
 import com.agile.inspeccion.data.model.SuministroModel
+import com.agile.inspeccion.data.service.Detalle
 import com.agile.inspeccion.ui.theme.AppTheme
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 //import java.io.File
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -125,32 +135,55 @@ class SuministroActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SuministroInterface(id: Int, viewModel: SuministroModel) {
-    var measurement1 by remember { mutableStateOf("") }
-    var selectedOption by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    //var showMenu by remember { mutableStateOf(false) }
-    var expanded by remember { mutableStateOf(false) }
-    val options = listOf("Opción 1", "Opción 2", "Opción 3")
 
     val detalle by viewModel.detalle.collectAsStateWithLifecycle()
+    val lectura by viewModel.lectura.collectAsStateWithLifecycle()
+    val observacion by viewModel.observacion.collectAsStateWithLifecycle()
+    val fotoTipo by viewModel.fotoTipo.collectAsStateWithLifecycle()
+
+
+    val context = LocalContext.current
+
+
+
 
     viewModel.GetDetalleById(id)
 
     var showMapDialog by remember { mutableStateOf(false) }
 
+
     val micIcon = context.resources.getIdentifier("mic", "drawable", context.packageName)
     var showObservacionDialog by remember { mutableStateOf(false) }
     var observacionText by remember { mutableStateOf("") }
-    var observacionId by remember { mutableStateOf(0) }
+
+    var latitude by remember { mutableStateOf(0.0) }
+    var longitude by remember { mutableStateOf(0.0) }
+
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
 
 
     val observacionOptions = listOf(
+        ObservacionOption(0, ""),
         ObservacionOption(1, "Opción 1"),
         ObservacionOption(2, "Opción 2"),
         ObservacionOption(3, "Opción 3"),
         ObservacionOption(4, "Opción 4")
     )
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permiso concedido, obtener ubicación
+            getLocation(context, fusedLocationClient) { location ->
+                latitude = location.latitude
+                longitude = location.longitude
+            }
+        } else {
+            //locationText = "Permiso de ubicación denegado"
+        }
+    }
 
 
     var hasCameraPermission by remember { mutableStateOf(false) }
@@ -171,7 +204,8 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
                 val processedBitmap = processImage(capturedBitmap)
                 //val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                 //val currentTimestamp = dateFormat.format(Date())
-                viewModel.agregarImagen(processedBitmap)
+                var photo = DetalleImagen(processedBitmap, fotoTipo )
+                viewModel.agregarImagen(photo)
             }
         }
     )
@@ -312,9 +346,9 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
 
 
                     BasicTextField(
-                        value = measurement1,
+                        value = lectura,
                         onValueChange = {
-                            measurement1 = it
+                            viewModel.setLectura(it)
                         },
                         modifier = Modifier
                             .height(height = 32.dp)
@@ -349,10 +383,10 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
 
 
                     BasicTextField(
-                        value = observacionText,
+                        value = (observacionOptions.find { it.id == observacion })!!.nombre,
                         onValueChange = {
                             observacionText = it
-                            observacionId = 0 // Reset ID when text is manually changed
+                            viewModel.setObservacion(0) // Reset ID when text is manually changed
                         },
                         modifier = Modifier
                             .height(height = 32.dp)
@@ -382,6 +416,7 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
             ) {
                 Button(
                     onClick = {
+                        viewModel.setFotoTipo(1)
                         when {
                             ContextCompat.checkSelfPermission(
                                 context,
@@ -401,6 +436,7 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
                 }
                 Button(
                     onClick = {
+                        viewModel.setFotoTipo(2)
                         when {
                             ContextCompat.checkSelfPermission(
                                 context,
@@ -413,15 +449,74 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
                                 permissionLauncher.launch(android.Manifest.permission.CAMERA)
                             }
                         }
-                    },
-                    //modifier = Modifier.align(Alignment.CenterHorizontally)
+                    }
                 ) {
                     Text("Foto \nPanoramica")
                 }
                 Button(
                     onClick = {
+
+                        if(lectura.equals("")){
+                            Toast.makeText(context, "Ingrese lectura", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        if(observacion == 0){
+                            Toast.makeText(context, "Ingrese Observación", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
+                        if((viewModel.imagenesCapturadas .filter { it.tipo == 1 }).size == 0){
+                            Toast.makeText(context, "Ingrese foto lectura", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
+                        if((viewModel.imagenesCapturadas .filter { it.tipo == 2 }).size == 0){
+                            Toast.makeText(context, "Ingrese foto panoramica", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
+                        when {
+
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                android.Manifest.permission.ACCESS_FINE_LOCATION
+                            ) == PackageManager.PERMISSION_GRANTED -> {
+                                getLocation(context, fusedLocationClient) { location ->
+                                    latitude = location.latitude
+                                    longitude = location.longitude
+                                }
+                            }
+                            else -> {
+                                requestPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                            }
+                        }
+
+                        val currentDateTime = LocalDateTime.now()
+                        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                        val formatted = currentDateTime.format(formatter)
+
+                        viewModel.updateDetalle(
+                            detalle!!.id,
+                            lectura,
+                            observacion.toString(),
+                            latitude,
+                            longitude,
+                            formatted)
+
+                        viewModel.imagenesCapturadas.forEach {
+                            viewModel.addImage(it.foto, detalle!!.id, it.tipo)
+                        }
+
+                        Toast.makeText(context, "Lectura grabada", Toast.LENGTH_SHORT).show()
+
+                        var siguiente = viewModel.siguiente(detalle!!.id)
+                        val intent = Intent(context, SuministroActivity::class.java).apply {
+                            putExtra("id", siguiente!!.id)
+                        }
+                        context.startActivity(intent)
+
                     },
-                    //modifier = Modifier.align(Alignment.CenterHorizontally)
+
                 ) {
                     Text("Grabar")
                 }
@@ -435,10 +530,12 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
                     Box(
                         modifier = Modifier
                             //.padding(horizontal = .dp)
-                            .clickable { viewModel.seleccionarImagenParaAmpliar(bitmap) }
+                            .clickable {
+                                viewModel.seleccionarImagenParaAmpliar(bitmap)
+                            }
                     ) {
                         Image(
-                            bitmap = bitmap.asImageBitmap(),
+                            bitmap = bitmap.foto.asImageBitmap(),
                             contentDescription = "Foto capturada",
                             modifier = Modifier
                                 .size(150.dp)
@@ -472,11 +569,11 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
                             .clickable { viewModel.cerrarImagenAmpliada() }
                     ) {
                         Image(
-                            bitmap = bitmap.asImageBitmap(),
+                            bitmap = bitmap.foto.asImageBitmap(),
                             contentDescription = "Foto ampliada",
                             modifier = Modifier
                                 .fillMaxSize()
-                                .aspectRatio(bitmap.width.toFloat() / bitmap.height.toFloat())
+                                .aspectRatio(bitmap.foto.width.toFloat() / bitmap.foto.height.toFloat())
                                 .align(Alignment.Center),
                             contentScale = ContentScale.Fit
                         )
@@ -500,7 +597,7 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
                     observacionText = observacionText,
                     onObservacionChange = { text, id ->
                         observacionText = text
-                        observacionId = id
+                        viewModel.setObservacion(id)
                     },
                     options = observacionOptions,
                     onDismiss = { showObservacionDialog = false }
@@ -537,6 +634,26 @@ fun SuministroInterface(id: Int, viewModel: SuministroModel) {
                 }
             }
         }
+    }
+}
+
+
+
+
+
+
+fun getLocation(
+    context: Context,
+    fusedLocationClient: com.google.android.gms.location.FusedLocationProviderClient,
+    onLocationResult: (Location) -> Unit
+) {
+    try {
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location: Location? ->
+                location?.let(onLocationResult)
+            }
+    } catch (e: SecurityException) {
+        // Manejar la excepción si el permiso no está concedido
     }
 }
 

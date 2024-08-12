@@ -233,7 +233,7 @@ fun DetalleLibroScreen(inspeccion: Int, viewModel: ListModel) {
                 }
             }
             Text(
-                text = "Completado 0 de ${detalles.size}",
+                text = "Completado ${detalles.filter { it.actualizado == 1 }.size} de ${detalles.size}",
 
                 fontSize = 14.sp,
                 modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp)
@@ -369,6 +369,11 @@ fun DetalleLibroScreen(inspeccion: Int, viewModel: ListModel) {
 
 @Composable
 fun ListItem1(item: Detalle, onClick: () -> Unit) {
+    val backgroundColor = if (item.actualizado == 0) {
+        MaterialTheme.colorScheme.surfaceVariant
+    } else {
+        MaterialTheme.colorScheme.secondaryContainer
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -376,7 +381,7 @@ fun ListItem1(item: Detalle, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = backgroundColor,
         )
     ) {
         Column() {

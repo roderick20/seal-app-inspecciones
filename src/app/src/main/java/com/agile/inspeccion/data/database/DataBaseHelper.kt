@@ -5,25 +5,31 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.graphics.Bitmap
 import com.agile.inspeccion.data.service.Detalle
 import com.agile.inspeccion.data.service.Grupo
+import java.io.ByteArrayOutputStream
 
-class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class DatabaseHelper(context: Context) :
+    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
-        private const val DATABASE_NAME = "biblioteca1.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_NAME = "seal2.db"
+        private const val DATABASE_VERSION = 3
     }
 
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE grupo (
                 inspeccion INTEGER,
                 tecnicoId INTEGER,
                 cantidad INTEGER
             )
-        """)
+        """
+        )
 
-        db.execSQL("""
+        db.execSQL(
+            """
             CREATE TABLE detalle (
                 id INTEGER,
                 contrato INTEGER,
@@ -33,21 +39,57 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 inspeccionId INTEGER,
                 latitud REAL,
                 longitud REAL,
-                tecnicoAsignado INTEGER                
+                tecnicoAsignado INTEGER,
+                                 lectura TEXT DEFAULT '',
+     observacion INTEGER DEFAULT 0,
+     latitudSave REAL DEFAULT 0,
+     longitudSave REAL  DEFAULT 0,
+     fechaSave  TEXT DEFAULT '',
+
+     actualizado INTEGER  DEFAULT 0
             )
-        """)
+        """
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE detalleImagen (
+                id  INTEGER PRIMARY KEY AUTOINCREMENT,
+                detalleid INTEGER,
+                foto BLOB,
+                tipo INTEGER
+            )
+        """
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS grupo")
         db.execSQL("DROP TABLE IF EXISTS detalle")
+        db.execSQL("DROP TABLE IF EXISTS detalleImagen")
         onCreate(db)
+    }
+
+    fun addImage(foto: Bitmap, detalleid: Int, tipo: Int): Long {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        val stream = ByteArrayOutputStream()
+        foto.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        val byteArray = stream.toByteArray()
+        values.put("foto", byteArray)
+        values.put("detalleid", detalleid)
+        values.put("tipo", tipo)
+        val id = db.insert("detalleImagen", null, values)
+        db.close()
+        return id
     }
 
     fun insertGrupo(grupo: Grupo) {
         writableDatabase.use { db ->
-            db.execSQL("INSERT INTO grupo (inspeccion, tecnicoId, cantidad) VALUES (?, ?, ?)",
-                arrayOf(grupo.inspeccion, grupo.tecnicoId, grupo.cantidad))
+            db.execSQL(
+                "INSERT INTO grupo (inspeccion, tecnicoId, cantidad) VALUES (?, ?, ?)",
+                arrayOf(grupo.inspeccion, grupo.tecnicoId, grupo.cantidad)
+            )
         }
     }
 
@@ -73,8 +115,30 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     fun insertDetalle(detalle: Detalle) {
         writableDatabase.use { db ->
-            db.execSQL("INSERT INTO detalle (id, contrato, medidor, nombres, direccion, inspeccionId, latitud, longitud, tecnicoAsignado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                arrayOf(detalle.id, detalle.contrato, detalle.medidor, detalle.nombres, detalle.direccion, detalle.inspeccionId, detalle.latitud, detalle.longitud, detalle.tecnicoAsignado))
+
+
+            db.execSQL(
+                "INSERT INTO detalle (id, contrato, medidor, nombres, direccion, inspeccionId, latitud, longitud, tecnicoAsignado, lectura, observacion, latitudSave, longitudSave, fechaSave, actualizado) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,   ?,?,?,?,?,?)",
+                arrayOf(
+                    detalle.id,
+                    detalle.contrato,
+                    detalle.medidor,
+                    detalle.nombres,
+                    detalle.direccion,
+                    detalle.inspeccionId,
+                    detalle.latitud,
+                    detalle.longitud,
+                    detalle.tecnicoAsignado,
+
+                    "",
+                    0,
+                    0,
+                    0,
+                    "",
+                    0
+                )
+            )
         }
     }
 
@@ -97,7 +161,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             if (it.moveToFirst()) {
                 do {
                     val operacion = Detalle(
-                        it.getInt(it.getColumnIndexOrThrow( "id")),
+                        it.getInt(it.getColumnIndexOrThrow("id")),
                         it.getInt(it.getColumnIndexOrThrow("contrato")),
                         it.getInt(it.getColumnIndexOrThrow("medidor")),
                         it.getString(it.getColumnIndexOrThrow("nombres")),
@@ -105,8 +169,16 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                         it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
                         it.getDouble(it.getColumnIndexOrThrow("latitud")),
                         it.getDouble(it.getColumnIndexOrThrow("longitud")),
-                        it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado"))
-                    )
+                        it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado")),
+
+                        it.getString(it.getColumnIndexOrThrow("lectura")),
+                        it.getInt(it.getColumnIndexOrThrow("observacion")),
+                        it.getDouble(it.getColumnIndexOrThrow("latitudSave")),
+                        it.getDouble(it.getColumnIndexOrThrow("longitudSave")),
+                        it.getString(it.getColumnIndexOrThrow("fechaSave")),
+                        it.getInt(it.getColumnIndexOrThrow("actualizado")),
+
+                        )
                     operacionList.add(operacion)
                 } while (it.moveToNext())
             }
@@ -121,24 +193,55 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         val cursor = db.rawQuery(selectQuery, arrayOf(id.toString()))
         return cursor.use {
             if (it.moveToFirst()) {
+                Detalle(
+                    it.getInt(it.getColumnIndexOrThrow("id")),
+                    it.getInt(it.getColumnIndexOrThrow("contrato")),
+                    it.getInt(it.getColumnIndexOrThrow("medidor")),
+                    it.getString(it.getColumnIndexOrThrow("nombres")),
+                    it.getString(it.getColumnIndexOrThrow("direccion")),
+                    it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
+                    it.getDouble(it.getColumnIndexOrThrow("latitud")),
+                    it.getDouble(it.getColumnIndexOrThrow("longitud")),
+                    it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado")),
 
-                     Detalle(
-                        it.getInt(it.getColumnIndexOrThrow( "id")),
-                        it.getInt(it.getColumnIndexOrThrow("contrato")),
-                        it.getInt(it.getColumnIndexOrThrow("medidor")),
-                        it.getString(it.getColumnIndexOrThrow("nombres")),
-                        it.getString(it.getColumnIndexOrThrow("direccion")),
-                        it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
-                        it.getDouble(it.getColumnIndexOrThrow("latitud")),
-                        it.getDouble(it.getColumnIndexOrThrow("longitud")),
-                        it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado"))
-                    )
-
-
-            }
-            else null
+                    it.getString(it.getColumnIndexOrThrow("lectura")),
+                    it.getInt(it.getColumnIndexOrThrow("observacion")),
+                    it.getDouble(it.getColumnIndexOrThrow("latitudSave")),
+                    it.getDouble(it.getColumnIndexOrThrow("longitudSave")),
+                    it.getString(it.getColumnIndexOrThrow("fechaSave")),
+                    it.getInt(it.getColumnIndexOrThrow("actualizado")),
+                )
+            } else null
         }
+    }
 
+    fun getSiguiente(id: Int): Detalle? {
+
+        val selectQuery = "SELECT * FROM Detalle WHERE id > ? AND actualizado = 0"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, arrayOf(id.toString()))
+        return cursor.use {
+            if (it.moveToFirst()) {
+                Detalle(
+                    it.getInt(it.getColumnIndexOrThrow("id")),
+                    it.getInt(it.getColumnIndexOrThrow("contrato")),
+                    it.getInt(it.getColumnIndexOrThrow("medidor")),
+                    it.getString(it.getColumnIndexOrThrow("nombres")),
+                    it.getString(it.getColumnIndexOrThrow("direccion")),
+                    it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
+                    it.getDouble(it.getColumnIndexOrThrow("latitud")),
+                    it.getDouble(it.getColumnIndexOrThrow("longitud")),
+                    it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado")),
+
+                    it.getString(it.getColumnIndexOrThrow("lectura")),
+                    it.getInt(it.getColumnIndexOrThrow("observacion")),
+                    it.getDouble(it.getColumnIndexOrThrow("latitudSave")),
+                    it.getDouble(it.getColumnIndexOrThrow("longitudSave")),
+                    it.getString(it.getColumnIndexOrThrow("fechaSave")),
+                    it.getInt(it.getColumnIndexOrThrow("actualizado")),
+                )
+            } else null
+        }
     }
 
     fun search(column: String, search: String): List<Detalle> {
@@ -150,7 +253,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             if (it.moveToFirst()) {
                 do {
                     val operacion = Detalle(
-                        it.getInt(it.getColumnIndexOrThrow( "id")),
+                        it.getInt(it.getColumnIndexOrThrow("id")),
                         it.getInt(it.getColumnIndexOrThrow("contrato")),
                         it.getInt(it.getColumnIndexOrThrow("medidor")),
                         it.getString(it.getColumnIndexOrThrow("nombres")),
@@ -158,13 +261,53 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                         it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
                         it.getDouble(it.getColumnIndexOrThrow("latitud")),
                         it.getDouble(it.getColumnIndexOrThrow("longitud")),
-                        it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado"))
+                        it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado")),
+
+                        it.getString(it.getColumnIndexOrThrow("lectura")),
+                        it.getInt(it.getColumnIndexOrThrow("observacion")),
+                        it.getDouble(it.getColumnIndexOrThrow("latitudSave")),
+                        it.getDouble(it.getColumnIndexOrThrow("longitudSave")),
+                        it.getString(it.getColumnIndexOrThrow("fechaSave")),
+                        it.getInt(it.getColumnIndexOrThrow("actualizado")),
                     )
                     operacionList.add(operacion)
                 } while (it.moveToNext())
             }
         }
         return operacionList
+    }
+
+    fun updateOperacion(detalle: Detalle): Int {
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put("lectura", detalle.lectura)
+            put("observacion", detalle.observacion)
+            put("latitudSave", detalle.latitudSave)
+            put("longitudSave", detalle.longitudSave)
+            put("fechaSave", detalle.fechaSave)
+            put("actualizado", 1)
+        }
+        return db.update("Detalle", values, "id = ?", arrayOf(detalle.id.toString()))
+    }
+
+    fun updateDetalle(
+        id: Int,
+        lectura: String,
+        observacion: String,
+        latitudSave: Double,
+        longitudSave: Double,
+        fechaSave: String
+    ): Int {
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put("lectura", lectura)
+            put("observacion", observacion)
+            put("latitudSave", latitudSave)
+            put("longitudSave", longitudSave)
+            put("fechaSave", fechaSave)
+            put("actualizado", 1)
+        }
+        return db.update("Detalle", values, "id = ?", arrayOf(id.toString()))
     }
 
 
@@ -393,20 +536,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return operacionList
     }
 
-    fun updateOperacion(operacion: Operacion): Int {
-        val db = this.writableDatabase
-        val values = ContentValues().apply {
-            put(KEY_MEDIDOR, operacion.medidor)
-            put(KEY_TECNICO, operacion.tecnico)
-            put(KEY_NOMBRES, operacion.nombres)
-            put(KEY_DIRECCION, operacion.direccion)
-            put(KEY_INSPECCION, operacion.inspeccion)
-            put(KEY_GRUPOID, operacion.grupoid)
-            put(KEY_LATITUD, operacion.latitud)
-            put(KEY_LONGITUD, operacion.longitud)
-        }
-        return db.update(TABLE_OPERACION, values, "$KEY_ID = ?", arrayOf(operacion.id.toString()))
-    }
+
 
     fun deleteOperacion(id: Int): Int {
         val db = this.writableDatabase

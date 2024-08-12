@@ -14,12 +14,13 @@ class ListModel(private val databaseHelper: DatabaseHelper) : ViewModel() {
     val detalles = _detalles.asStateFlow()
 
     fun GetDetalle(inspeccionId: Int) {
+        var _error: String
         viewModelScope.launch {
             //_isLoading.value = true
             try {
                 _detalles.value = databaseHelper.getDetalleByInspeccionId(inspeccionId)
             } catch (e: Exception) {
-                //_error.value = "Error: ${e.message}"
+                _error  = "Error: ${e.message}"
             } finally {
                 //_isLoading.value = false
             }

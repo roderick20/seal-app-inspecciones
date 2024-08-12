@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.compose)
     implementation(libs.androidx.lifecycle.runtime.compose.android)
     implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

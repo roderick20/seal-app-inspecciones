@@ -20,6 +20,7 @@ lifecycleRuntimeComposeAndroid = "2.8.4"
 
 coil = "1.4.0"
 playServicesMaps = "19.0.0"
+playServicesLocation = "21.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -51,6 +52,7 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
 androidx-lifecycle-runtime-compose-android = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose-android", version.ref = "lifecycleRuntimeComposeAndroid" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

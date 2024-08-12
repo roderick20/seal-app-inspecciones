@@ -19,7 +19,15 @@ data class Detalle(
     val inspeccionId: Int,
     val latitud: Double,
     val longitud: Double,
-    val tecnicoAsignado: Int
+    val tecnicoAsignado: Int,
+
+    val lectura: String,
+    val observacion: Int,
+    val latitudSave: Double,
+    val longitudSave: Double,
+    val fechaSave: String,
+
+    val actualizado: Int,
 )
 
 
