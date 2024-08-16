@@ -13,12 +13,12 @@ class ListModel(private val databaseHelper: DatabaseHelper) : ViewModel() {
     private val _detalles = MutableStateFlow<List<Detalle>>(emptyList())
     val detalles = _detalles.asStateFlow()
 
-    fun GetDetalle(inspeccionId: Int) {
+    fun GetDetalle(inspeccionId: Int, showPending: Boolean, showInspected: Boolean, showAll: Boolean) {
         var _error: String
         viewModelScope.launch {
             //_isLoading.value = true
             try {
-                _detalles.value = databaseHelper.getDetalleByInspeccionId(inspeccionId)
+                _detalles.value = databaseHelper.getDetalleByInspeccionId(inspeccionId, showPending, showInspected, showAll)
             } catch (e: Exception) {
                 _error  = "Error: ${e.message}"
             } finally {

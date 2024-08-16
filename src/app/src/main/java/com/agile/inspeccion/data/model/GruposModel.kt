@@ -7,13 +7,18 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.agile.inspeccion.data.database.DatabaseHelper
+import com.agile.inspeccion.data.database.Foto
+import com.agile.inspeccion.data.service.Detalle
 import com.agile.inspeccion.data.service.Grupo
 import com.agile.inspeccion.data.service.RetrofitClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
+import com.agile.inspeccion.data.database.Result
+//import kotlin.io.encoding.Base64
+import android.util.Base64
+import java.io.File
 
 class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() {
     var isLoading by mutableStateOf(false)
@@ -25,7 +30,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
     var showDownloadDialog by mutableStateOf(false)
         private set
 
-    private val _grupos = MutableStateFlow<List<Grupo>>(emptyList())
+    private val _grupos = MutableStateFlow<List<Result>>(emptyList())
     val grupos = _grupos.asStateFlow()
 
     init {
@@ -79,15 +84,82 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
         viewModelScope.launch {
             //_isLoading.value = true
             try {
-                _grupos.value = databaseHelper.getAllGrupo()
+                _grupos.value = databaseHelper.getGrupo()
             } catch (e: Exception) {
                 //_error.value = "Error: ${e.message}"
             } finally {
                 //_isLoading.value = false
             }
         }
+    }
 
+    fun GetDetalleNoEnviado() :List<Detalle> {
+        //viewModelScope.launch {
+            //_isLoading.value = true
+            try {
+                return databaseHelper.getDetalleNoEnviado()
+            } catch (e: Exception) {
+                //_error.value = "Error: ${e.message}"
+            } finally {
+                //_isLoading.value = false
+            }
+        //}Result
+        return emptyList()
+    }
 
+    fun GetFotoNoEnviado() :List<Foto> {
+        //viewModelScope.launch {
+        //_isLoading.value = true
+        try {
+            return databaseHelper.getFotoNoEnviado()
+        } catch (e: Exception) {
+            //_error.value = "Error: ${e.message}"
+        } finally {
+            //_isLoading.value = false
+        }
+        //}Result
+        return emptyList()
+    }
+
+    fun GetMain() :List<Result> {
+        //viewModelScope.launch {
+        //_isLoading.value = true
+        try {
+            return databaseHelper.getGrupo()
+        } catch (e: Exception) {
+            //_error.value = "Error: ${e.message}"
+        } finally {
+            //_isLoading.value = false
+        }
+        //}
+        return emptyList()
+    }
+
+    fun SaveDetalle(detalle: Detalle) {
+        viewModelScope.launch {
+            //_isLoading.value = true
+            try {
+                RetrofitClient.grabarGrabarApi.grabar("login", detalle.uniqueId, detalle.lectura, detalle.observacion.toString(), detalle.fechaSave, detalle.latitudSave.toString(), detalle.longitudSave.toString())
+            } catch (e: Exception) {
+                var error = "Error: ${e.message}"
+            } finally {
+                //_isLoading.value = false
+            }
+        }
+    }
+
+    fun SaveFoto(foto: Foto) {
+        viewModelScope.launch {
+            //var file = Base64.encodeToString(foto.foto, Base64.NO_WRAP);
+            try {
+
+                RetrofitClient.uploadFile(foto )
+            } catch (e: Exception) {
+                var error = "Error: ${e.message}"
+            } finally {
+                //_isLoading.value = false
+            }
+        }
     }
 
     fun DeleteAll() {
@@ -103,14 +175,33 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
                 //_isLoading.value = false
             }
         }
-
-
     }
 
-/*
-    fun dismissDownloadDialog() {
-        showDownloadDialog = false
-        downloadProgress = 0f
-        downloadStatus = ""
-    }*/
+    fun DetalleEnviado( UniqueId: String) {
+        viewModelScope.launch {
+            //_isLoading.value = true
+            try {
+                databaseHelper.updateDetalleByUniqueId(UniqueId)
+
+            } catch (e: Exception) {
+                //_error.value = "Error: ${e.message}"
+            } finally {
+                //_isLoading.value = false
+            }
+        }
+    }
+
+    fun DetalleFotoEnviado( Id: Int) {
+        viewModelScope.launch {
+            //_isLoading.value = true
+            try {
+                databaseHelper.updateDetalleFotoByUniqueId(Id)
+
+            } catch (e: Exception) {
+                //_error.value = "Error: ${e.message}"
+            } finally {
+                //_isLoading.value = false
+            }
+        }
+    }
 }
