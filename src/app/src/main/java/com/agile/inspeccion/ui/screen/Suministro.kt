@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+//import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Place
@@ -64,6 +65,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -90,26 +92,11 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
+//import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 
 data class ObservacionOption(val id: Int, val nombre: String, val requiereLectura: Int, val requiereFoto: Int)
-
-/*class SuministroActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        var id = 0
-        intent.extras?.let { bundle ->
-            id = bundle.getInt("id", 0)
-        }
-        val databaseHelper = DatabaseHelper(this)
-        enableEdgeToEdge()
-        setContent {
-            AppTheme {
-                val viewModel: SuministroModel = viewModel { SuministroModel(databaseHelper) }
-                SuministroInterface(id, viewModel)
-            }
-        }
-    }
-}*/
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -120,7 +107,17 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
     val observacion by viewModel.observacion.collectAsStateWithLifecycle()
     val fotoTipo by viewModel.fotoTipo.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    viewModel.GetDetalleById(id)
+    /*var error: String
+
+        try {
+            viewModel.GetDetalleById(id)
+        }catch (e: Exception) {
+            error = "Error: ${e.message}"
+        }*/
+
+
+
+
 
     val coroutineScope = rememberCoroutineScope()
     BackHandler {
@@ -265,7 +262,7 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
             TopAppBar(
                 title = {
                     Text(
-                        text = "SEAL Sistema Comercial",
+                        text = "SEAL Gestión Comercial",
                         color = Color.White
                     )
                 },
@@ -334,22 +331,23 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                     Text(
                         text = buildAnnotatedString {
                             withStyle(style = SpanStyle(color = Color.Black)) {
-                                append(detalle?.contrato.toString())
+                                append(detalle!!.contrato.toString())
                             }
-                            append(" ")
+                            append(" | ")
                             withStyle(style = SpanStyle(color = Color.Blue)) {
-                                append("1202005000819 - ")
+                                append(detalle!!.ruta)
                             }
-                            append(" ")
+                            append(" | ")
                             withStyle(style = SpanStyle(color = Color.Gray)) {
-                                append("498266")
+                                append(detalle!!.nombres)
                             }
-                            append(" ")
+                            append(" | ")
                             withStyle(style = SpanStyle(color = Color.Gray)) {
-                                append(detalle?.direccion.toString())
+                                append(detalle!!.direccion)
                             }
-                            withStyle(style = SpanStyle(color = Color.Red)) {
-                                append(" - 0")
+                            append(" | ")
+                            withStyle(style = SpanStyle(color = Color.Gray)) {
+                                append(detalle!!.nim)
                             }
                         },
                         modifier = Modifier.padding(start = 16.dp, top = 5.dp, bottom = 5.dp)
@@ -367,6 +365,7 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                 Text(
                     text = "Lectura: ",
                     textAlign = TextAlign.Start,
+
                     modifier = Modifier
                         .padding(start = 8.dp, top = 5.dp, bottom = 0.dp)
                         .weight(0.4f)
@@ -385,6 +384,7 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                         onValueChange = {
                             viewModel.setLectura(it)
                         },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier
                             .height(height = 32.dp)
                             .fillMaxWidth()
@@ -540,8 +540,19 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                             longitude,
                             formatted)
 
+                        viewModel.GetDetalleById(detalle!!.id)
+
+
+
                         viewModel.imagenesCapturadas.forEach {
                             viewModel.addImage(it.foto, detalle!!.id, it.tipo)
+                        }
+
+
+                        var detalles2 = viewModel.GetDetalleNoEnviado()
+                        for(detalle in detalles2) {
+                            viewModel.SaveDetalle(detalle)
+                            viewModel.DetalleEnviado(detalle.uniqueId)
                         }
 
                         Toast.makeText(context, "Lectura grabada", Toast.LENGTH_SHORT).show()
@@ -783,9 +794,9 @@ fun ObservacionDialog(
 @Preview(showBackground = true)
 @Composable
 fun SuministroPreview() {
-    val previewViewModel = SuministroModel(DatabaseHelper(LocalContext.current))
+    val previewViewModel = SuministroModel(DatabaseHelper(LocalContext.current), 1)
     val navController = rememberNavController()
     AppTheme {
-        SuministroInterface( navController,1, previewViewModel )
+        SuministroInterface( navController,11163, previewViewModel )
     }
 }

@@ -18,6 +18,7 @@ object RetrofitClient {
         //.writeTimeout(60, TimeUnit.SECONDS)
 
         .baseUrl("https://operacionessealapi.seal.com.pe/")
+        //.baseUrl("https://3d15-2001-1388-49ea-51f-6124-b7a2-23a0-8644.ngrok-free.app/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 

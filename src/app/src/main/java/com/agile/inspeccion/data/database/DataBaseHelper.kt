@@ -36,7 +36,7 @@ class DatabaseHelper(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "seal2.db"
-        private const val DATABASE_VERSION = 8
+        private const val DATABASE_VERSION = 11
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -55,15 +55,18 @@ class DatabaseHelper(context: Context) :
             """
             CREATE TABLE detalle (
                 id INTEGER,
+                uniqueId TEXT,
                 contrato INTEGER,
-                medidor INTEGER,
+                medidor TEXT,
                 nombres TEXT,
+                ruta TEXT,
                 direccion TEXT,
+                nim TEXT,
                 inspeccionId INTEGER,
                 latitud REAL,
                 longitud REAL,
                 tecnicoAsignado INTEGER,
-                uniqueId TEXT,
+                
                 
                 lectura TEXT DEFAULT '',
                  observacion INTEGER DEFAULT 0,
@@ -170,19 +173,22 @@ class DatabaseHelper(context: Context) :
 
 
                 db.execSQL(
-                    "INSERT INTO detalle (id, contrato, medidor, nombres, direccion, inspeccionId, latitud, longitud, tecnicoAsignado, uniqueId, lectura, observacion, latitudSave, longitudSave, fechaSave, actualizado, enviado) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,   ?,?,?,?,?,?,?)",
+                    "INSERT INTO detalle (id, uniqueId, contrato, medidor, nombres, ruta, direccion, nim, inspeccionId, latitud, longitud, tecnicoAsignado, lectura, observacion, latitudSave, longitudSave, fechaSave, actualizado, enviado) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,   ?,?,?,?,?,?,?)",
                     arrayOf(
                         detalle.id,
+                        detalle.uniqueId,
                         detalle.contrato,
                         detalle.medidor,
                         detalle.nombres,
+                        detalle.ruta,
                         detalle.direccion,
+                        detalle.nim,
                         detalle.inspeccionId,
                         detalle.latitud,
                         detalle.longitud,
                         detalle.tecnicoAsignado,
-                        detalle.uniqueId,
+
                         "",
                         0,
                         0,
@@ -231,16 +237,17 @@ class DatabaseHelper(context: Context) :
                 do {
                     val operacion = Detalle(
                         it.getInt(it.getColumnIndexOrThrow("id")),
+                        it.getString(it.getColumnIndexOrThrow("uniqueId")),
                         it.getInt(it.getColumnIndexOrThrow("contrato")),
-                        it.getInt(it.getColumnIndexOrThrow("medidor")),
+                        it.getString(it.getColumnIndexOrThrow("medidor")),
                         it.getString(it.getColumnIndexOrThrow("nombres")),
+                        it.getString(it.getColumnIndexOrThrow("ruta")),
                         it.getString(it.getColumnIndexOrThrow("direccion")),
+                        it.getString(it.getColumnIndexOrThrow("nim")),
                         it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
                         it.getDouble(it.getColumnIndexOrThrow("latitud")),
                         it.getDouble(it.getColumnIndexOrThrow("longitud")),
                         it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado")),
-                        it.getString(it.getColumnIndexOrThrow("uniqueId")),
-
                         it.getString(it.getColumnIndexOrThrow("lectura")),
                         it.getInt(it.getColumnIndexOrThrow("observacion")),
                         it.getDouble(it.getColumnIndexOrThrow("latitudSave")),
@@ -267,16 +274,17 @@ class DatabaseHelper(context: Context) :
                 do {
                     val operacion = Detalle(
                         it.getInt(it.getColumnIndexOrThrow("id")),
+                        it.getString(it.getColumnIndexOrThrow("uniqueId")),
                         it.getInt(it.getColumnIndexOrThrow("contrato")),
-                        it.getInt(it.getColumnIndexOrThrow("medidor")),
+                        it.getString(it.getColumnIndexOrThrow("medidor")),
                         it.getString(it.getColumnIndexOrThrow("nombres")),
+                        it.getString(it.getColumnIndexOrThrow("ruta")),
                         it.getString(it.getColumnIndexOrThrow("direccion")),
+                        it.getString(it.getColumnIndexOrThrow("nim")),
                         it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
                         it.getDouble(it.getColumnIndexOrThrow("latitud")),
                         it.getDouble(it.getColumnIndexOrThrow("longitud")),
                         it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado")),
-                        it.getString(it.getColumnIndexOrThrow("uniqueId")),
-
                         it.getString(it.getColumnIndexOrThrow("lectura")),
                         it.getInt(it.getColumnIndexOrThrow("observacion")),
                         it.getDouble(it.getColumnIndexOrThrow("latitudSave")),
@@ -375,16 +383,17 @@ LEFT JOIN (
             if (it.moveToFirst()) {
                 Detalle(
                     it.getInt(it.getColumnIndexOrThrow("id")),
+                    it.getString(it.getColumnIndexOrThrow("uniqueId")),
                     it.getInt(it.getColumnIndexOrThrow("contrato")),
-                    it.getInt(it.getColumnIndexOrThrow("medidor")),
+                    it.getString(it.getColumnIndexOrThrow("medidor")),
                     it.getString(it.getColumnIndexOrThrow("nombres")),
+                    it.getString(it.getColumnIndexOrThrow("ruta")),
                     it.getString(it.getColumnIndexOrThrow("direccion")),
+                    it.getString(it.getColumnIndexOrThrow("nim")),
                     it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
                     it.getDouble(it.getColumnIndexOrThrow("latitud")),
                     it.getDouble(it.getColumnIndexOrThrow("longitud")),
                     it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado")),
-                    it.getString(it.getColumnIndexOrThrow("uniqueId")),
-
                     it.getString(it.getColumnIndexOrThrow("lectura")),
                     it.getInt(it.getColumnIndexOrThrow("observacion")),
                     it.getDouble(it.getColumnIndexOrThrow("latitudSave")),
@@ -406,16 +415,17 @@ LEFT JOIN (
             if (it.moveToFirst()) {
                 Detalle(
                     it.getInt(it.getColumnIndexOrThrow("id")),
+                    it.getString(it.getColumnIndexOrThrow("uniqueId")),
                     it.getInt(it.getColumnIndexOrThrow("contrato")),
-                    it.getInt(it.getColumnIndexOrThrow("medidor")),
+                    it.getString(it.getColumnIndexOrThrow("medidor")),
                     it.getString(it.getColumnIndexOrThrow("nombres")),
+                    it.getString(it.getColumnIndexOrThrow("ruta")),
                     it.getString(it.getColumnIndexOrThrow("direccion")),
+                    it.getString(it.getColumnIndexOrThrow("nim")),
                     it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
                     it.getDouble(it.getColumnIndexOrThrow("latitud")),
                     it.getDouble(it.getColumnIndexOrThrow("longitud")),
                     it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado")),
-                    it.getString(it.getColumnIndexOrThrow("uniqueId")),
-
                     it.getString(it.getColumnIndexOrThrow("lectura")),
                     it.getInt(it.getColumnIndexOrThrow("observacion")),
                     it.getDouble(it.getColumnIndexOrThrow("latitudSave")),
@@ -438,16 +448,17 @@ LEFT JOIN (
                 do {
                     val operacion = Detalle(
                         it.getInt(it.getColumnIndexOrThrow("id")),
+                        it.getString(it.getColumnIndexOrThrow("uniqueId")),
                         it.getInt(it.getColumnIndexOrThrow("contrato")),
-                        it.getInt(it.getColumnIndexOrThrow("medidor")),
+                        it.getString(it.getColumnIndexOrThrow("medidor")),
                         it.getString(it.getColumnIndexOrThrow("nombres")),
+                        it.getString(it.getColumnIndexOrThrow("ruta")),
                         it.getString(it.getColumnIndexOrThrow("direccion")),
+                        it.getString(it.getColumnIndexOrThrow("nim")),
                         it.getInt(it.getColumnIndexOrThrow("inspeccionId")),
                         it.getDouble(it.getColumnIndexOrThrow("latitud")),
                         it.getDouble(it.getColumnIndexOrThrow("longitud")),
                         it.getInt(it.getColumnIndexOrThrow("tecnicoAsignado")),
-                        it.getString(it.getColumnIndexOrThrow("uniqueId")),
-
                         it.getString(it.getColumnIndexOrThrow("lectura")),
                         it.getInt(it.getColumnIndexOrThrow("observacion")),
                         it.getDouble(it.getColumnIndexOrThrow("latitudSave")),

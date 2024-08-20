@@ -116,7 +116,7 @@ fun MyApp(nombre: String, login: String, databaseHelper: DatabaseHelper) {
             arguments = listOf(navArgument("id") { type = NavType.IntType })
         ) { backStackEntry ->
             var id = backStackEntry.arguments?.getInt("id") ?: 0
-            val viewModel: SuministroModel = viewModel { SuministroModel(databaseHelper) }
+            val viewModel: SuministroModel = viewModel { SuministroModel(databaseHelper, id) }
             SuministroInterface(navController, id, viewModel)
         }
     }

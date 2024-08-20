@@ -17,15 +17,18 @@ data class Grupo(
 
 data class Detalle(
     val id: Int,
+    val uniqueId: String,
     val contrato: Int,
-    val medidor: Int,
+    val medidor: String,
     val nombres: String,
+    val ruta: String,
     val direccion: String,
+    val nim: String,
     val inspeccionId: Int,
     val latitud: Double,
     val longitud: Double,
     val tecnicoAsignado: Int,
-    val uniqueId: String,
+
 
     val lectura: String,
     val observacion: Int,

@@ -222,7 +222,7 @@ fun ListItem(grupo: Result, onClick: () -> Unit) {
                     }
                     append("Inspeccionados[${grupo.inspeccionados}] - Enviados[${grupo.enviados}] - Fotos[${grupo.imagenes_enviadas+grupo.imagenes_no_enviadas}] - Fotos enviadas[${grupo.imagenes_enviadas}]")
                 },
-                fontSize = 12.sp,
+                //fontSize = 12.sp,
                 modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
             )
 

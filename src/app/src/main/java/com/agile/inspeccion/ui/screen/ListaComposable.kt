@@ -145,7 +145,7 @@ fun DetalleLibroScreen(navController: NavController, inspeccion: Int, viewModel:
         TopAppBar(
             title = {
                 Text(
-                    text = "SEAL Sistema Comercial", color = Color(0xFFFFFFFF)
+                    text = "SEAL Gestión Comercial", color = Color(0xFFFFFFFF)
                 )
             },
             actions = {
@@ -442,21 +442,23 @@ fun ListItem1(item: Detalle, onClick: () -> Unit) {
                     withStyle(style = SpanStyle(color = Color.Black)) {
                         append(item.contrato.toString())
                     }
-                    append(" ")
+                    append(" | ")
                     withStyle(style = SpanStyle(color = Color.Blue)) {
-                        append("1202005000819 - ")
+                        append(item.ruta)
                     }
-                    append(" ")
+                    append(" | ")
                     withStyle(style = SpanStyle(color = Color.Gray)) {
-                        append(item.contrato.toString())
+                        append(item.nombres)
                     }
-                    append(" ")
+                    append(" | ")
                     withStyle(style = SpanStyle(color = Color.Gray)) {
                         append(item.direccion)
                     }
-                    withStyle(style = SpanStyle(color = Color.Red)) {
-                        append(" - 0")
+                    append(" | ")
+                    withStyle(style = SpanStyle(color = Color.Gray)) {
+                        append(item.nim)
                     }
+
                 }, modifier = Modifier.padding(start = 16.dp, top = 5.dp, bottom = 5.dp)
             )
 

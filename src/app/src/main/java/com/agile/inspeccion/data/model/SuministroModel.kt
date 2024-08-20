@@ -8,7 +8,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.agile.inspeccion.data.database.DatabaseHelper
+import com.agile.inspeccion.data.database.Foto
 import com.agile.inspeccion.data.service.Detalle
+import com.agile.inspeccion.data.service.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -18,10 +20,14 @@ data class DetalleImagen(
     val tipo: Int
 )
 
-class SuministroModel (private val databaseHelper: DatabaseHelper) : ViewModel() {
+class SuministroModel (private val databaseHelper: DatabaseHelper, private val id: Int) : ViewModel() {
 
     private val _detalle = MutableStateFlow<Detalle?>(null)
     val detalle = _detalle.asStateFlow()
+
+    init {
+        GetDetalleById(id)
+    }
 
     private val _fotoTipo = MutableStateFlow<Int>(0)
     val fotoTipo = _fotoTipo.asStateFlow()
@@ -50,12 +56,13 @@ class SuministroModel (private val databaseHelper: DatabaseHelper) : ViewModel()
     val contrato = _contrato.asStateFlow()
 
     fun GetDetalleById(inspeccionId: Int) {
+        var error: String
         viewModelScope.launch {
             //_isLoading.value = true
             try {
                 _detalle.value = databaseHelper.getDetalleById(inspeccionId)
             } catch (e: Exception) {
-                //_error.value = "Error: ${e.message}"
+                error = "Error: ${e.message}"
             } finally {
                 //_isLoading.value = false
             }
@@ -75,6 +82,60 @@ class SuministroModel (private val databaseHelper: DatabaseHelper) : ViewModel()
         _imagenesCapturadas.value = _imagenesCapturadas.value - bitmap
     }
 
+    fun SaveDetalle(detalle: Detalle) {
+        viewModelScope.launch {
+            //_isLoading.value = true
+            try {
+                RetrofitClient.grabarGrabarApi.grabar("login", detalle.uniqueId, detalle.lectura, detalle.observacion.toString(), detalle.fechaSave, detalle.latitudSave.toString(), detalle.longitudSave.toString())
+            } catch (e: Exception) {
+                var error = "Error: ${e.message}"
+            } finally {
+                //_isLoading.value = false
+            }
+        }
+    }
+
+    fun DetalleEnviado( UniqueId: String) {
+        viewModelScope.launch {
+            //_isLoading.value = true
+            try {
+                databaseHelper.updateDetalleByUniqueId(UniqueId)
+
+            } catch (e: Exception) {
+                //_error.value = "Error: ${e.message}"
+            } finally {
+                //_isLoading.value = false
+            }
+        }
+    }
+
+    fun GetDetalleNoEnviado() :List<Detalle> {
+        //viewModelScope.launch {
+        //_isLoading.value = true
+        try {
+            return databaseHelper.getDetalleNoEnviado()
+        } catch (e: Exception) {
+            //_error.value = "Error: ${e.message}"
+        } finally {
+            //_isLoading.value = false
+        }
+        //}Result
+        return emptyList()
+    }
+
+    fun GetFotoNoEnviado() :List<Foto> {
+        //viewModelScope.launch {
+        //_isLoading.value = true
+        try {
+            return databaseHelper.getFotoNoEnviado()
+        } catch (e: Exception) {
+            //_error.value = "Error: ${e.message}"
+        } finally {
+            //_isLoading.value = false
+        }
+        //}Result
+        return emptyList()
+    }
 
 
     private val _imagenAmpliada = mutableStateOf<DetalleImagen?>(null)

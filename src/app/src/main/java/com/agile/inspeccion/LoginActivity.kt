@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.os.StrictMode
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -59,7 +60,7 @@ class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
+        //StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder().permitAll().build())
 
         enableEdgeToEdge()
         setContent {
@@ -80,6 +81,11 @@ fun LoginScreen() {
 
     var username by remember { mutableStateOf(sharedPreferences.getString("username", "") ?: "") }
     var password by remember { mutableStateOf(sharedPreferences.getString("password", "") ?: "") }
+
+//    var username by remember { mutableStateOf( "rquicaña") }
+//    var password by remember { mutableStateOf( "44142556") }
+
+
     var rememberPassword by remember { mutableStateOf(false) }
 
 
