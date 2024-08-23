@@ -1,5 +1,6 @@
 package com.agile.inspeccion.ui.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -53,6 +54,13 @@ fun MainScreen(navController: NavController, nombre: String, login: String, grup
     val grupos by gruposModel.grupos.collectAsStateWithLifecycle()
     //var grupos = gruposModel.GetMain()
     val context = LocalContext.current
+
+    BackHandler {
+        // Exit the application
+        android.os.Process.killProcess(android.os.Process.myPid())
+    }
+
+
     Scaffold(
         topBar = {
             TopAppBar(

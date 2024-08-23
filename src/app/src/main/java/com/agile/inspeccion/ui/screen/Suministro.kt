@@ -4,14 +4,18 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -94,40 +99,114 @@ import java.util.Date
 import java.util.Locale
 //import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.window.DialogProperties
+import androidx.core.app.ActivityCompat
 
 data class ObservacionOption(val id: Int, val nombre: String, val requiereLectura: Int, val requiereFoto: Int)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SuministroInterface(navController: NavController, id: Int, viewModel: SuministroModel) {
+    var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
+    var showCameraDialog by remember { mutableStateOf(false) }
 
+    SuministroScreen(
+        navController,
+        id,
+        viewModel,
+        capturedImage = capturedImage,
+        onTakePhotoClick = { showCameraDialog = true }
+    )
+
+    if (showCameraDialog) {
+        Dialog(
+            onDismissRequest = { showCameraDialog = false },
+            properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = false)
+        ) {
+            CameraScreenDialog(
+                onPhotoTaken = { bitmap ->
+                    capturedImage = bitmap
+                    showCameraDialog = false
+                },
+                onDismiss = { showCameraDialog = false }
+            )
+        }
+    }
+}
+
+@Composable
+fun CameraScreenDialog(onPhotoTaken: (Bitmap) -> Unit, onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AlertDialogDefaults.containerColor)
+    ) {
+        CameraScreen(onPhotoTaken = onPhotoTaken)
+        IconButton(
+            onClick = onDismiss,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Default.Close, contentDescription = "Close")
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SuministroScreen(navController: NavController, id: Int, viewModel: SuministroModel, capturedImage: Bitmap?, onTakePhotoClick: () -> Unit) {
     val detalle by viewModel.detalle.collectAsStateWithLifecycle()
     val lectura by viewModel.lectura.collectAsStateWithLifecycle()
     val observacion by viewModel.observacion.collectAsStateWithLifecycle()
     val fotoTipo by viewModel.fotoTipo.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    /*var error: String
-
-        try {
-            viewModel.GetDetalleById(id)
-        }catch (e: Exception) {
-            error = "Error: ${e.message}"
-        }*/
-
-
-
-
-
     val coroutineScope = rememberCoroutineScope()
+
+    var buttonEnabledFotoLectura by remember { mutableStateOf(false) }
+    var buttonEnabledFotoPanoramica by remember { mutableStateOf(false) }
+    var buttonEnabledGrabar by remember { mutableStateOf(false) }
+
     BackHandler {
         coroutineScope.launch {
             navController.navigate("list/" + detalle!!.inspeccionId.toString())
         }
     }
-
-
-
+//--------------------------------------------------------------------------------------------------
+    var location by remember { mutableStateOf<Location?>(null) }
+    val locationManager = remember {
+        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    }
+    val locationListener = remember {
+        object : LocationListener {
+            override fun onLocationChanged(newLocation: Location) {
+                location = newLocation
+            }
+            // Implement other methods if needed
+        }
+    }
+    LaunchedEffect(true) {
+        if (true) {
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    0L,
+                    0f,
+                    locationListener
+                )
+            }
+        } else {
+            locationManager.removeUpdates(locationListener)
+        }
+    }
+//--------------------------------------------------------------------------------------------------
     var showMapDialog by remember { mutableStateOf(false) }
 
 
@@ -203,59 +282,34 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
 
         )
 
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
+    /*val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            // Permiso concedido, obtener ubicación
-            getLocation(context, fusedLocationClient) { location ->
+            getLocation( fusedLocationClient) { location ->
                 latitude = location.latitude
                 longitude = location.longitude
             }
-        } else {
-            //locationText = "Permiso de ubicación denegado"
         }
-    }
+    }*/
 
 
     var hasCameraPermission by remember { mutableStateOf(false) }
-    //val file = remember { context.createImageFile() }
-    /*val uri = remember {
-        FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.fileprovider",
-            file
-        )
-    }*/
+    var localCapturedImage by remember { mutableStateOf<Bitmap?>(null) }
 
-    var capturedImages by remember { mutableStateOf(listOf<Pair<Bitmap, String>>()) }
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview(),
-        onResult = { bitmap: Bitmap? ->
-            bitmap?.let { capturedBitmap ->
-                val processedBitmap = processImage(capturedBitmap, detalle!!.contrato.toString())
-                //val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                //val currentTimestamp = dateFormat.format(Date())
-                var photo = DetalleImagen(processedBitmap, fotoTipo )
-                viewModel.agregarImagen(photo)
-            }
-        }
-    )
-
-
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { granted ->
-            hasCameraPermission = granted
-            if (granted) {
-                cameraLauncher.launch(null)
+    LaunchedEffect(capturedImage) {
+        if (capturedImage != null) {
+            val processedBitmap = if (fotoTipo == 1) {
+                processImage90(capturedImage, detalle!!.contrato.toString())
             } else {
-                // Aquí puedes mostrar un mensaje al usuario explicando por qué necesitas el permiso
+                processImage(capturedImage, detalle!!.contrato.toString())
             }
-        }
-    )
 
+            val photo = DetalleImagen(processedBitmap, fotoTipo)
+            viewModel.agregarImagen(photo)
+            localCapturedImage = null  // Reset the local state
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -266,15 +320,7 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                         color = Color.White
                     )
                 },
-                actions = {
-                    /*IconButton(onClick = { showMenu = !showMenu }) {
-                        Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = "Más opciones",
-                            tint = Color.White
-                        )
-                    }*/
-                },
+                actions = { },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
@@ -358,9 +404,7 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                //horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                //horizontalArrangement = Arrangement.Start
+                     verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "Lectura: ",
@@ -383,6 +427,8 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                         value = lectura,
                         onValueChange = {
                             viewModel.setLectura(it)
+                            buttonEnabledFotoLectura = true
+
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier
@@ -421,7 +467,10 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                         value = (observacionOptions.find { it.id == observacion })!!.nombre,
                         onValueChange = {
                             observacionText = it
-                            viewModel.setObservacion(0) // Reset ID when text is manually changed
+                            viewModel.setObservacion(0)
+
+
+
                         },
                         modifier = Modifier
                             .height(height = 32.dp)
@@ -433,13 +482,11 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                 }
 
                 Button(
-                    //contentPadding = PaddingValues(all = 1.dp),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
                         .weight(0.1f)
                         .height(32.dp),
                     onClick = { showObservacionDialog = true },
-                    //modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     Text(".")
                 }
@@ -452,57 +499,35 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
+                    enabled = buttonEnabledFotoLectura,
                     onClick = {
+                        onTakePhotoClick()
                         viewModel.setFotoTipo(1)
-                        when {
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                android.Manifest.permission.CAMERA
-                            ) == PackageManager.PERMISSION_GRANTED -> {
-                                cameraLauncher.launch(null)
-                            }
+                        buttonEnabledFotoPanoramica = true
 
-                            else -> {
-                                permissionLauncher.launch(android.Manifest.permission.CAMERA)
-                            }
-                        }
-                    },
-                    //modifier = Modifier.align(Alignment.CenterHorizontally)
+                    }
+
                 ) {
                     Text("Foto \nLectura")
                 }
                 Button(
+                    enabled = buttonEnabledFotoPanoramica,
                     onClick = {
+                        onTakePhotoClick()
                         viewModel.setFotoTipo(2)
-                        when {
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                android.Manifest.permission.CAMERA
-                            ) == PackageManager.PERMISSION_GRANTED -> {
-                                cameraLauncher.launch(null)
-                            }
-
-                            else -> {
-                                permissionLauncher.launch(android.Manifest.permission.CAMERA)
-                            }
-                        }
+                        buttonEnabledGrabar = true
                     }
                 ) {
                     Text("Foto \nPanoramica")
                 }
                 Button(
+                    enabled = buttonEnabledGrabar,
                     onClick = {
-
                         if(lectura.equals("")){
                             Toast.makeText(context, "Ingrese lectura", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
-                        /*if(observacion == 0){
-                            Toast.makeText(context, "Ingrese Observación", Toast.LENGTH_SHORT).show()
-                            return@Button
-                        }*/
-
-                        if((viewModel.imagenesCapturadas .filter { it.tipo == 1 }).size == 0){
+                        /*if((viewModel.imagenesCapturadas .filter { it.tipo == 1 }).size == 0){
                             Toast.makeText(context, "Ingrese foto lectura", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
@@ -510,15 +535,19 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                         if((viewModel.imagenesCapturadas .filter { it.tipo == 2 }).size == 0){
                             Toast.makeText(context, "Ingrese foto panoramica", Toast.LENGTH_SHORT).show()
                             return@Button
+                        }*/
+
+                        if(viewModel.imagenesCapturadas.size < 2){
+                            Toast.makeText(context, "Ingrese foto lectura", Toast.LENGTH_SHORT).show()
+                            return@Button
                         }
 
-                        when {
-
+                        /*when {
                             ContextCompat.checkSelfPermission(
                                 context,
                                 android.Manifest.permission.ACCESS_FINE_LOCATION
                             ) == PackageManager.PERMISSION_GRANTED -> {
-                                getLocation(context, fusedLocationClient) { location ->
+                                getLocation( fusedLocationClient) { location ->
                                     latitude = location.latitude
                                     longitude = location.longitude
                                 }
@@ -526,18 +555,20 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                             else -> {
                                 requestPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
                             }
-                        }
+                        }*/
 
                         val currentDateTime = LocalDateTime.now()
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                         val formatted = currentDateTime.format(formatter)
 
+
+
                         viewModel.updateDetalle(
                             detalle!!.id,
                             lectura,
                             observacion.toString(),
-                            latitude,
-                            longitude,
+                            location?.latitude ?: 0.0,
+                            location?.longitude ?: 0.0,
                             formatted)
 
                         viewModel.GetDetalleById(detalle!!.id)
@@ -554,15 +585,14 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                             viewModel.SaveDetalle(detalle)
                             viewModel.DetalleEnviado(detalle.uniqueId)
                         }
-
                         Toast.makeText(context, "Lectura grabada", Toast.LENGTH_SHORT).show()
-
                         var siguiente = viewModel.siguiente(detalle!!.id)
-                        /*val intent = Intent(context, SuministroActivity::class.java).apply {
-                            putExtra("id", siguiente!!.id)
+                        if(siguiente != null){
+                            navController.navigate("suministro/" + siguiente!!.id.toString())
                         }
-                        context.startActivity(intent)*/
-                        navController.navigate("suministro/" + siguiente!!.id.toString())
+                        else{
+                            navController.navigate("list/" + detalle!!.inspeccionId.toString())
+                        }
 
                     },
 
@@ -606,6 +636,9 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+
             if (viewModel.imagenesCapturadas.isNotEmpty()) {
                 Text(
                     "Fotos capturadas: ${viewModel.imagenesCapturadas.size}",
@@ -631,18 +664,6 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                     }
                 }
             }
-            /*
-                        if (capturedImages.isNotEmpty()) {
-                            Text("Fotos capturadas: ${capturedImages.size}", modifier = Modifier.padding(16.dp))
-                        }
-
-                        if (capturedImages.isNotEmpty()) {
-                            Text(
-                                "Fotos capturadas: ${capturedImages.size}",
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }*/
-
             if (showObservacionDialog) {
                 ObservacionDialog(
                     observacionText = observacionText,
@@ -654,8 +675,6 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                     onDismiss = { showObservacionDialog = false }
                 )
             }
-
-
             if (showMapDialog) {
                 Dialog(onDismissRequest = { showMapDialog = false }) {
                     Card(
@@ -670,7 +689,6 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
                                 MapView(context).apply {
                                     onCreate(null)
                                     getMapAsync { googleMap ->
-                                        // Coordenadas de ejemplo (puedes cambiarlas según tus necesidades)
                                         val location = LatLng(detalle!!.latitud, detalle!!.longitud)
                                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
                                         googleMap.addMarker(MarkerOptions().position(location))
@@ -688,16 +706,7 @@ fun SuministroInterface(navController: NavController, id: Int, viewModel: Sumini
     }
 }
 
-
-
-
-
-
-fun getLocation(
-    context: Context,
-    fusedLocationClient: com.google.android.gms.location.FusedLocationProviderClient,
-    onLocationResult: (Location) -> Unit
-) {
+fun getLocation(fusedLocationClient: com.google.android.gms.location.FusedLocationProviderClient, onLocationResult: (Location) -> Unit) {
     try {
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
@@ -708,7 +717,33 @@ fun getLocation(
     }
 }
 
+fun processImage90(bitmap: Bitmap, suministro: String): Bitmap {
+    val matrix = Matrix().apply { postRotate(90f) }
+    val rotatedBitmap = Bitmap.createBitmap(
+        bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
+    )
+    val mutableBitmap = rotatedBitmap.copy(Bitmap.Config.ARGB_8888, true)
+    val canvas = Canvas(mutableBitmap)
+    val paint = Paint().apply {
+        color = android.graphics.Color.RED
+        textSize = mutableBitmap.width * 0.05f // Tamaño del texto relativo al ancho de la imagen
+        isAntiAlias = true
+        style = Paint.Style.FILL
+        setShadowLayer(5f, 2f, 2f, android.graphics.Color.BLACK) // Sombra para mejorar la legibilidad
+        textAlign = Paint.Align.RIGHT
+    }
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+    val dateTime = dateFormat.format(Date())
+    val x = mutableBitmap.width - 20f
+    val y = mutableBitmap.height - 20f
+    canvas.drawText(suministro+"    "+dateTime, x, y, paint)
+    return mutableBitmap
+}
+
 fun processImage(bitmap: Bitmap, suministro: String): Bitmap {
+
+
+
     val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
     val canvas = Canvas(mutableBitmap)
     val paint = Paint().apply {

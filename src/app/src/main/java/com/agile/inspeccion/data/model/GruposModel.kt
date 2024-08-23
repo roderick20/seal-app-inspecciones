@@ -113,7 +113,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
         try {
             return databaseHelper.getFotoNoEnviado()
         } catch (e: Exception) {
-            //_error.value = "Error: ${e.message}"
+            var _error = "Error: ${e.message}"
         } finally {
             //_isLoading.value = false
         }

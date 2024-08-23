@@ -36,7 +36,7 @@ class DatabaseHelper(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "seal2.db"
-        private const val DATABASE_VERSION = 11
+        private const val DATABASE_VERSION = 12
     }
 
     override fun onCreate(db: SQLiteDatabase) {

@@ -1,5 +1,6 @@
 package com.agile.inspeccion
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -57,6 +58,7 @@ import com.agile.inspeccion.data.model.GruposViewModel
 import com.agile.inspeccion.data.model.ListModel
 import com.agile.inspeccion.data.model.SuministroModel
 import com.agile.inspeccion.data.service.Grupo
+import com.agile.inspeccion.ui.screen.CameraScreen
 import com.agile.inspeccion.ui.screen.DetalleLibroScreen
 import com.agile.inspeccion.ui.screen.MainScreen
 import com.agile.inspeccion.ui.screen.SuministroInterface
@@ -92,11 +94,15 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MyApp(nombre: String, login: String, databaseHelper: DatabaseHelper) {
-    var _nombre: String = nombre;
-    var _login: String = login;
+    var _nombre: String = nombre
+    var _login: String = login
+    var suministroId: Int
 
 
     val navController = rememberNavController()
+    var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
+
+
     NavHost(navController = navController, startDestination = "MainScreen") {
         composable("MainScreen") {
             val viewModel: GruposViewModel = viewModel { GruposViewModel(databaseHelper) }
@@ -117,7 +123,17 @@ fun MyApp(nombre: String, login: String, databaseHelper: DatabaseHelper) {
         ) { backStackEntry ->
             var id = backStackEntry.arguments?.getInt("id") ?: 0
             val viewModel: SuministroModel = viewModel { SuministroModel(databaseHelper, id) }
-            SuministroInterface(navController, id, viewModel)
+            SuministroInterface(navController, id, viewModel                )
+        }
+        composable("camera") {
+            CameraScreen(
+                onPhotoTaken = { bitmap ->
+                    capturedImage = bitmap
+                    navController.navigate("main") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
