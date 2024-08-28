@@ -84,7 +84,7 @@ fun MainScreen(navController: NavController, nombre: String, login: String, grup
                         DropdownMenuItem(
                             text = { Text("Descargar Inspecciones") },
                             onClick = {
-                                gruposModel.cargarDatos()
+                                gruposModel.cargarDatos(login)
                                 showMenu = false
                             }
                         )
@@ -118,6 +118,19 @@ fun MainScreen(navController: NavController, nombre: String, login: String, grup
                                 }
                                 showMenu = false
                                 gruposModel.GetAllGrupo()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Descargar Observaciones") },
+                            onClick = {
+//                                var fotos = gruposModel.GetFotoNoEnviado()
+//                                for(foto in fotos) {
+//                                    gruposModel.SaveFoto(foto)
+//
+//                                    gruposModel.DetalleFotoEnviado(foto.id)
+//                                }
+//                                showMenu = false
+//                                gruposModel.GetAllGrupo()
                             }
                         )
                     }

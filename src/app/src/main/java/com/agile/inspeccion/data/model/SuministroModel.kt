@@ -21,6 +21,15 @@ data class DetalleImagen(
 )
 
 class SuministroModel (private val databaseHelper: DatabaseHelper, private val id: Int) : ViewModel() {
+//class SuministroModel : ViewModel {
+//    private val databaseHelper: DatabaseHelper
+//    public var id: Int = 0
+//
+//    // Constructor primario privado
+//    private constructor(databaseHelper: DatabaseHelper, id: Int) : super() {
+//        this.databaseHelper = databaseHelper
+//        this.id = id
+//    }
 
     private val _detalle = MutableStateFlow<Detalle?>(null)
     val detalle = _detalle.asStateFlow()

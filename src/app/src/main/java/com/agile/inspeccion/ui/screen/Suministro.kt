@@ -105,6 +105,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.ViewModel
+import com.agile.inspeccion.data.service.Detalle
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 data class ObservacionOption(val id: Int, val nombre: String, val requiereLectura: Int, val requiereFoto: Int)
 
@@ -281,19 +285,6 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
         ObservacionOption(58,"60-Caja porta medidor polimérica amarilla o empañada CON LECTURA",1,1),
 
         )
-
-    /*val requestPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            getLocation( fusedLocationClient) { location ->
-                latitude = location.latitude
-                longitude = location.longitude
-            }
-        }
-    }*/
-
-
     var hasCameraPermission by remember { mutableStateOf(false) }
     var localCapturedImage by remember { mutableStateOf<Bitmap?>(null) }
 
@@ -826,12 +817,30 @@ fun ObservacionDialog(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun SuministroPreview() {
-    val previewViewModel = SuministroModel(DatabaseHelper(LocalContext.current), 1)
-    val navController = rememberNavController()
-    AppTheme {
-        SuministroInterface( navController,11163, previewViewModel )
-    }
-}
+
+
+//@Preview(showBackground = true)
+//@Composable
+//fun SuministroScreenPreview() {
+//    val navController = rememberNavController()
+//    val mockViewModel = MockSuministroModel()
+//
+//    SuministroScreen(
+//        navController = navController,
+//        id = 1,
+//        viewModel = mockViewModel,
+//        capturedImage = null,
+//        onTakePhotoClick = {}
+//    )
+//}
+
+//@Preview(showBackground = true)
+//@Composable
+//fun SuministroPreview() {
+//    val previewViewModel = SuministroModel(DatabaseHelper(LocalContext.current), 1)
+//    val navController = rememberNavController()
+//    AppTheme {
+//        SuministroInterface( navController,11163, viewModel = previewViewModel )
+//    }
+//}
+

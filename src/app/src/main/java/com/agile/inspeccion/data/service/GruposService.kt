@@ -94,3 +94,4 @@ interface DetalleApi {
         @Query("inspeccionid") inspeccionid: Int,
     ):  List<Detalle>
 }
+

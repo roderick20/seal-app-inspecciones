@@ -32,6 +32,8 @@ object RetrofitClient {
 
     val grabarFotoApi: GrabarFotoApi = retrofit.create(GrabarFotoApi::class.java)
 
+    val observationApi: ObservationApi = retrofit.create(ObservationApi::class.java)
+
     suspend fun uploadFile(foto: Foto, fileName: String ="foto.jpeg", mimeType: String = "image/jpeg") {
 
         val detalleidBody = foto.detalleid.toString().toRequestBody("text/plain".toMediaTypeOrNull())

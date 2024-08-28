@@ -37,7 +37,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
         GetAllGrupo()
     }
 
-    fun cargarDatos() {
+    fun cargarDatos(login: String) {
         viewModelScope.launch {
             isLoading = true
             downloadProgress = 0f
@@ -45,7 +45,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
             showDownloadDialog = true
             try {
                 downloadStatus = "Descargando bibliotecas..."
-                val grupos = RetrofitClient.grupoApi.getGrupos("rquicaña")
+                val grupos = RetrofitClient.grupoApi.getGrupos(login)
                 downloadProgress = 0.2f
 
                 downloadStatus = "Guardando bibliotecas..."
@@ -55,7 +55,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
                 val totalBibliotecas = grupos.size
                 grupos.forEachIndexed { index, grupo ->
                     downloadStatus = "Descargando libros de ${grupo.inspeccion}..."
-                    val detalle = RetrofitClient.detalleApi.getDetalles("rquicaña", grupo.inspeccion)
+                    val detalle = RetrofitClient.detalleApi.getDetalles(login, grupo.inspeccion)
 
                     downloadStatus = "Guardando libros de ${grupo.inspeccion}..."
                     detalle.forEach { databaseHelper.insertDetalle(it) }
@@ -63,6 +63,39 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
                     // Actualizar progreso
                     downloadProgress = 0.4f + (0.6f * (index + 1) / totalBibliotecas)
                 }
+                downloadStatus = "Descarga completada"
+                downloadProgress = 1f
+                GetAllGrupo()
+                delay(500)
+            } catch (e: Exception) {
+                downloadStatus = "Error: ${e.localizedMessage}"
+            } finally {
+                isLoading = false
+                showDownloadDialog = false
+                // Reiniciar estados
+                downloadProgress = 0f
+                downloadStatus = ""
+            }
+        }
+    }
+
+
+    fun cargarObservacion(login: String) {
+        viewModelScope.launch {
+            isLoading = true
+            downloadProgress = 0f
+            downloadStatus = "Iniciando descarga..."
+            showDownloadDialog = true
+            try {
+                downloadStatus = "Descargando observaciones..."
+                val observations = RetrofitClient.observationApi.getObservation(login)
+                downloadProgress = 0.2f
+
+                observations.forEachIndexed { index, observation ->
+                    databaseHelper.updateObservation(observation.contrato)
+                }
+
+
                 downloadStatus = "Descarga completada"
                 downloadProgress = 1f
                 GetAllGrupo()
