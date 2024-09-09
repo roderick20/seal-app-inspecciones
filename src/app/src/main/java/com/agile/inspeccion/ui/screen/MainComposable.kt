@@ -1,5 +1,6 @@
 package com.agile.inspeccion.ui.screen
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -55,6 +56,8 @@ fun MainScreen(navController: NavController, nombre: String, login: String, grup
     //var grupos = gruposModel.GetMain()
     val context = LocalContext.current
 
+    val error by gruposModel.error.collectAsStateWithLifecycle()
+
     BackHandler {
         // Exit the application
         android.os.Process.killProcess(android.os.Process.myPid())
@@ -67,12 +70,10 @@ fun MainScreen(navController: NavController, nombre: String, login: String, grup
                 title = { Text(
                     text="SEAL Gestión Comercial",
                     color = Color(0xFFFFFFFF)
+                    //color = MaterialTheme.colorScheme.onPrimary
                 )
                 },
                 actions = {
-                    /*IconButton(onClick = {  }) {
-                        Icon(Icons.Default.Search, contentDescription = "Buscar")
-                    }*/
                     IconButton(onClick = { showMenu = !showMenu }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Más opciones", tint = Color.White)
 
@@ -113,11 +114,16 @@ fun MainScreen(navController: NavController, nombre: String, login: String, grup
                                 var fotos = gruposModel.GetFotoNoEnviado()
                                 for(foto in fotos) {
                                     gruposModel.SaveFoto(foto)
-
-                                    gruposModel.DetalleFotoEnviado(foto.id)
+                                    if (error == "") {
+                                        gruposModel.DetalleFotoEnviado(foto.id)
+                                    }
+                                    else{
+                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                                 showMenu = false
                                 gruposModel.GetAllGrupo()
+                                Toast.makeText(context, "Fotos enviadas", Toast.LENGTH_SHORT).show()
                             }
                         )
                         DropdownMenuItem(
@@ -136,6 +142,11 @@ fun MainScreen(navController: NavController, nombre: String, login: String, grup
                     }
                 },
                 colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color(0xFF005DA4))
+//                colors = TopAppBarDefaults.topAppBarColors(
+//                    containerColor = MaterialTheme.colorScheme.primary,
+//                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+//                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+//                )
             )
         }
     ) { innerPadding ->
@@ -217,36 +228,26 @@ fun ListItem(grupo: Result, onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable(onClick = onClick),
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+        border = BorderStroke(2.dp, MaterialTheme.colorScheme.outline),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = MaterialTheme.colorScheme.surface,
         )
     ) {
         Column() {
-            /*Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color.Blue)) {
-                        append(grupo.cantidad.toString().substringBefore(" "))
-                    }
-                    append(" ")
-                },
-                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-            )*/
             Text(
                 text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color.Blue)) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
                         append("Total[${grupo.total}] - ")
                     }
-                    append("")
-                    withStyle(style = SpanStyle(color = Color.Red)) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error)) {
                         append("Pendientes[${grupo.pendientes}] - ")
                     }
-                    append("Inspeccionados[${grupo.inspeccionados}] - Enviados[${grupo.enviados}] - Fotos[${grupo.imagenes_enviadas+grupo.imagenes_no_enviadas}] - Fotos enviadas[${grupo.imagenes_enviadas}]")
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
+                        append("Inspeccionados[${grupo.inspeccionados}] - Enviados[${grupo.enviados}] - Fotos[${grupo.imagenes_enviadas+grupo.imagenes_no_enviadas}] - Fotos enviadas[${grupo.imagenes_enviadas}]")
+                    }
                 },
-                //fontSize = 12.sp,
                 modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
             )
-
         }
     }
 }

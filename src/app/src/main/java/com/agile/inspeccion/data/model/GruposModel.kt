@@ -18,6 +18,9 @@ import kotlinx.coroutines.launch
 import com.agile.inspeccion.data.database.Result
 //import kotlin.io.encoding.Base64
 import android.util.Base64
+import com.agile.inspeccion.data.service.SaveResult
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() {
@@ -32,6 +35,9 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
 
     private val _grupos = MutableStateFlow<List<Result>>(emptyList())
     val grupos = _grupos.asStateFlow()
+
+    private val _error = MutableStateFlow<String>("")
+    val error = _error.asStateFlow()
 
     init {
         GetAllGrupo()
@@ -181,19 +187,64 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
         }
     }
 
+    /*suspend fun SaveDetalle(detalle: Detalle): SaveResult {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = RetrofitClient.grabarGrabarApi.grabar(
+                    "login",
+                    detalle.uniqueId,
+                    detalle.lectura,
+                    detalle.observacion.toString(),
+                    detalle.fechaSave,
+                    detalle.latitudSave.toString(),
+                    detalle.longitudSave.toString()
+                )
+
+                // Asumiendo que la API devuelve un código de éxito
+                if (response.isSuccessful) {
+                    SaveResult.Success("Detalle guardado exitosamente")
+                } else {
+                    SaveResult.Error("Error al guardar: ${response.message()}")
+                }
+            } catch (e: HttpException) {
+                SaveResult.Error("Error de red: ${e.message()}")
+            } catch (e: Exception) {
+                SaveResult.Error("Error inesperado: ${e.message}")
+            }
+        }
+    }*/
+
     fun SaveFoto(foto: Foto) {
+        _error.value = ""
         viewModelScope.launch {
             //var file = Base64.encodeToString(foto.foto, Base64.NO_WRAP);
             try {
-
                 RetrofitClient.uploadFile(foto )
+
             } catch (e: Exception) {
-                var error = "Error: ${e.message}"
+                _error.value = "Error: ${e.message}"
             } finally {
                 //_isLoading.value = false
             }
+
         }
+
     }
+
+//    suspend fun SaveFoto(foto: Foto): Boolean {
+//        return withContext(Dispatchers.IO) {
+//            try {
+//                RetrofitClient.uploadFile(foto)
+//                true
+//            } catch (e: Exception) {
+//                val error = "Error: ${e.message}"
+//                // Log the error or update some state
+//                false
+//            } finally {
+//                //_isLoading.value = false
+//            }
+//        }
+//    }
 
     fun DeleteAll() {
         viewModelScope.launch {

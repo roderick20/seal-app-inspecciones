@@ -58,7 +58,7 @@ import com.agile.inspeccion.data.model.GruposViewModel
 import com.agile.inspeccion.data.model.ListModel
 import com.agile.inspeccion.data.model.SuministroModel
 import com.agile.inspeccion.data.service.Grupo
-import com.agile.inspeccion.ui.screen.CameraScreen
+
 import com.agile.inspeccion.ui.screen.DetalleLibroScreen
 import com.agile.inspeccion.ui.screen.MainScreen
 import com.agile.inspeccion.ui.screen.SuministroInterface
@@ -126,14 +126,14 @@ fun MyApp(nombre: String, login: String, databaseHelper: DatabaseHelper) {
             SuministroInterface(navController, id, viewModel                )
         }
         composable("camera") {
-            CameraScreen(
+            /*CameraScreen(
                 onPhotoTaken = { bitmap ->
                     capturedImage = bitmap
                     navController.navigate("main") {
                         popUpTo("main") { inclusive = true }
                     }
                 }
-            )
+            )*/
         }
     }
 }

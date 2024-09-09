@@ -101,6 +101,7 @@ import java.util.Locale
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.window.DialogProperties
@@ -110,7 +111,12 @@ import com.agile.inspeccion.data.service.Detalle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class ObservacionOption(val id: Int, val nombre: String, val requiereLectura: Int, val requiereFoto: Int)
+data class ObservacionOption(
+    val id: Int,
+    val nombre: String,
+    val requiereLectura: Int,
+    val requiereFoto: Int
+)
 
 @Composable
 fun SuministroInterface(navController: NavController, id: Int, viewModel: SuministroModel) {
@@ -148,7 +154,8 @@ fun CameraScreenDialog(onPhotoTaken: (Bitmap) -> Unit, onDismiss: () -> Unit) {
             .fillMaxSize()
             .background(AlertDialogDefaults.containerColor)
     ) {
-        CameraScreen(onPhotoTaken = onPhotoTaken)
+        CameraCapture(onPhotoTaken = onPhotoTaken)
+
         IconButton(
             onClick = onDismiss,
             modifier = Modifier
@@ -162,7 +169,13 @@ fun CameraScreenDialog(onPhotoTaken: (Bitmap) -> Unit, onDismiss: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SuministroScreen(navController: NavController, id: Int, viewModel: SuministroModel, capturedImage: Bitmap?, onTakePhotoClick: () -> Unit) {
+fun SuministroScreen(
+    navController: NavController,
+    id: Int,
+    viewModel: SuministroModel,
+    capturedImage: Bitmap?,
+    onTakePhotoClick: () -> Unit
+) {
     val detalle by viewModel.detalle.collectAsStateWithLifecycle()
     val lectura by viewModel.lectura.collectAsStateWithLifecycle()
     val observacion by viewModel.observacion.collectAsStateWithLifecycle()
@@ -224,65 +237,109 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
 
-
     val observacionOptions = listOf(
-        ObservacionOption(0,"0-Ninguna",1,0),
-        ObservacionOption(1,"1-Contometro o display no se aprecia",0,1),
-        ObservacionOption(2,"2-Contómetro descentrado (no hay certeza en la lectura)",0,1),
-        ObservacionOption(3,"3-No displaya lectura (medidor malogrado)",0,1),
-        ObservacionOption(4,"4-Medidor o caja con medidor inclinado, colgado o amarrado",1,1),
-        ObservacionOption(5,"5-Medidor inaccesible",0,1),
-        ObservacionOption(6,"6-Medidor interior, usuario no se encuentra (no se puede lecturar)",0,1),
-        ObservacionOption(7,"7-Medidor en el techo",0,1),
-        ObservacionOption(8,"8-Medidor al ras del piso",1,0),
-        ObservacionOption(9,"9-Medidor en el poste",1,0),
-        ObservacionOption(10,"10-Caja sin numero de suministro",1,0),
-        ObservacionOption(11,"11-Zona peligrosa, perros  (no se puede lecturar)",0,1),
-        ObservacionOption(12,"12-Suministro no se ubica",0,1),
-        ObservacionOption(13,"13-Disco del medidor retrocede",1,0),
-        ObservacionOption(14,"14-Conexion invertida",1,0),
-        ObservacionOption(15,"15-Copa rota, rajada u opaca o empañada",0,1),
-        ObservacionOption(16,"16-Disco del medidor no gira (plantado cuando usuario consume energía)",1,0),
-        ObservacionOption(17,"17-Medidor quemado o bornera del medidor quemada",1,0),
-        ObservacionOption(18,"18-Lectura actual menor a la anterior",1,0),
-        ObservacionOption(19,"19-Suministro sin medidor y sin acometida",0,1),
-        ObservacionOption(20,"20-Suministro sin medidor y con acometida",0,1),
-        ObservacionOption(21,"21-Suministro con conexión directa a la red",1,0),
-        ObservacionOption(22,"22-Medidor con conexión directa desde la bornera o puentes en la bornera",1,0),
-        ObservacionOption(23,"23-Caja porta medidor sin precinto o precinto roto o manipulado",1,0),
-        ObservacionOption(24,"24-Caja normalizada sin pernos o pernos sin descabezar (caja sin asegurar)",1,0),
-        ObservacionOption(25,"25-Caja porta medidor sin tapa superior o inferior",1,1),
-        ObservacionOption(26,"26-Caja portamedidor con sello forza retirado, roto o abollado",1,0),
-        ObservacionOption(27,"27-Caja antigua sin remaches y sin soldar (caja sin asegurar)",1,0),
-        ObservacionOption(28,"28-Medidor ubicado muy alto",1,0),
-        ObservacionOption(29,"29-Numero de suministro mal rotulado",1,0),
-        ObservacionOption(31,"31-Medidor interior, usuario no permite tomar lectura (no se puede lecturar)",0,1),
-        ObservacionOption(32,"32-Suministro no pertenece a sed",1,0),
-        ObservacionOption(33,"33-Persona ajena a la empresa manipula el suministro",1,0),
-        ObservacionOption(34,"34-Suministro adicionado a la SED",1,0),
-        ObservacionOption(35,"35-Visor empañado, sucio o pintado (no se puede lecturar)",0,1),
-        ObservacionOption(36,"36-Ciclo completo del contador",1,0),
-        ObservacionOption(37,"37-Conexión clandestina cercana a este suministro",1,0),
-        ObservacionOption(38,"38-Luminaria encendida cercana a este suministro",1,0),
-        ObservacionOption(39,"39-SED con alumbrado publico encendido",1,0),
-        ObservacionOption(40,"40-Suministro con medidor nuevo",1,0),
-        ObservacionOption(41,"41-No displaya lectura (causa temporal)",0,1),
-        ObservacionOption(42,"42-Datos del medidor no coinciden",1,0),
-        ObservacionOption(43,"43-Fuera de Libro de lectura",1,0),
-        ObservacionOption(44,"44-Suministro con Ruta mal Asignada",1,0),
-        ObservacionOption(45,"45-Murete Dañado o Inclinado",1,0),
-        ObservacionOption(46,"46-Murete de AP sin Pintar",1,0),
-        ObservacionOption(47,"47-Mastil de F°G°, para murete de AP, sin cinta Band It",1,0),
-        ObservacionOption(48,"48-Medidor de AP en interior de caseta",1,0),
-        ObservacionOption(49,"49-Suministro para Alumbrado Complementario",1,0),
-        ObservacionOption(50,"50-Caja portamedidor energizada",1,0),
-        ObservacionOption(53,"53-MEDIDOR CAMBIADO-NUEVO",1,0),
-        ObservacionOption(241,"241-AÑADIDO EN CAMPO",1,1),
-        ObservacionOption(54,"54-Acometida descolgada, sin punto fijación y/o anclaje",1,0),
-        ObservacionOption(55,"55-Acometida sin protección mecánica (bastón)",1,0),
-        ObservacionOption(56,"56-Sin deficiencia por código 66 o 67",1,1),
-        ObservacionOption(57,"57-Medidor interior CON LECTURA",1,1),
-        ObservacionOption(58,"60-Caja porta medidor polimérica amarilla o empañada CON LECTURA",1,1),
+        ObservacionOption(0, "0-Ninguna", 1, 0),
+        ObservacionOption(1, "1-Contometro o display no se aprecia", 0, 1),
+        ObservacionOption(2, "2-Contómetro descentrado (no hay certeza en la lectura)", 0, 1),
+        ObservacionOption(3, "3-No displaya lectura (medidor malogrado)", 0, 1),
+        ObservacionOption(4, "4-Medidor o caja con medidor inclinado, colgado o amarrado", 1, 1),
+        ObservacionOption(5, "5-Medidor inaccesible", 0, 1),
+        ObservacionOption(
+            6,
+            "6-Medidor interior, usuario no se encuentra (no se puede lecturar)",
+            0,
+            1
+        ),
+        ObservacionOption(7, "7-Medidor en el techo", 0, 1),
+        ObservacionOption(8, "8-Medidor al ras del piso", 1, 0),
+        ObservacionOption(9, "9-Medidor en el poste", 1, 0),
+        ObservacionOption(10, "10-Caja sin numero de suministro", 1, 0),
+        ObservacionOption(11, "11-Zona peligrosa, perros  (no se puede lecturar)", 0, 1),
+        ObservacionOption(12, "12-Suministro no se ubica", 0, 1),
+        ObservacionOption(13, "13-Disco del medidor retrocede", 1, 0),
+        ObservacionOption(14, "14-Conexion invertida", 1, 0),
+        ObservacionOption(15, "15-Copa rota, rajada u opaca o empañada", 0, 1),
+        ObservacionOption(
+            16,
+            "16-Disco del medidor no gira (plantado cuando usuario consume energía)",
+            1,
+            0
+        ),
+        ObservacionOption(17, "17-Medidor quemado o bornera del medidor quemada", 1, 0),
+        ObservacionOption(18, "18-Lectura actual menor a la anterior", 1, 0),
+        ObservacionOption(19, "19-Suministro sin medidor y sin acometida", 0, 1),
+        ObservacionOption(20, "20-Suministro sin medidor y con acometida", 0, 1),
+        ObservacionOption(21, "21-Suministro con conexión directa a la red", 1, 0),
+        ObservacionOption(
+            22,
+            "22-Medidor con conexión directa desde la bornera o puentes en la bornera",
+            1,
+            0
+        ),
+        ObservacionOption(
+            23,
+            "23-Caja porta medidor sin precinto o precinto roto o manipulado",
+            1,
+            0
+        ),
+        ObservacionOption(
+            24,
+            "24-Caja normalizada sin pernos o pernos sin descabezar (caja sin asegurar)",
+            1,
+            0
+        ),
+        ObservacionOption(25, "25-Caja porta medidor sin tapa superior o inferior", 1, 1),
+        ObservacionOption(
+            26,
+            "26-Caja portamedidor con sello forza retirado, roto o abollado",
+            1,
+            0
+        ),
+        ObservacionOption(
+            27,
+            "27-Caja antigua sin remaches y sin soldar (caja sin asegurar)",
+            1,
+            0
+        ),
+        ObservacionOption(28, "28-Medidor ubicado muy alto", 1, 0),
+        ObservacionOption(29, "29-Numero de suministro mal rotulado", 1, 0),
+        ObservacionOption(
+            31,
+            "31-Medidor interior, usuario no permite tomar lectura (no se puede lecturar)",
+            0,
+            1
+        ),
+        ObservacionOption(32, "32-Suministro no pertenece a sed", 1, 0),
+        ObservacionOption(33, "33-Persona ajena a la empresa manipula el suministro", 1, 0),
+        ObservacionOption(34, "34-Suministro adicionado a la SED", 1, 0),
+        ObservacionOption(35, "35-Visor empañado, sucio o pintado (no se puede lecturar)", 0, 1),
+        ObservacionOption(36, "36-Ciclo completo del contador", 1, 0),
+        ObservacionOption(37, "37-Conexión clandestina cercana a este suministro", 1, 0),
+        ObservacionOption(38, "38-Luminaria encendida cercana a este suministro", 1, 0),
+        ObservacionOption(39, "39-SED con alumbrado publico encendido", 1, 0),
+        ObservacionOption(40, "40-Suministro con medidor nuevo", 1, 0),
+        ObservacionOption(41, "41-No displaya lectura (causa temporal)", 0, 1),
+        ObservacionOption(42, "42-Datos del medidor no coinciden", 1, 0),
+        ObservacionOption(43, "43-Fuera de Libro de lectura", 1, 0),
+        ObservacionOption(44, "44-Suministro con Ruta mal Asignada", 1, 0),
+        ObservacionOption(45, "45-Murete Dañado o Inclinado", 1, 0),
+        ObservacionOption(46, "46-Murete de AP sin Pintar", 1, 0),
+        ObservacionOption(47, "47-Mastil de F°G°, para murete de AP, sin cinta Band It", 1, 0),
+        ObservacionOption(48, "48-Medidor de AP en interior de caseta", 1, 0),
+        ObservacionOption(49, "49-Suministro para Alumbrado Complementario", 1, 0),
+        ObservacionOption(50, "50-Caja portamedidor energizada", 1, 0),
+        ObservacionOption(53, "53-MEDIDOR CAMBIADO-NUEVO", 1, 0),
+        ObservacionOption(241, "241-AÑADIDO EN CAMPO", 1, 1),
+        ObservacionOption(54, "54-Acometida descolgada, sin punto fijación y/o anclaje", 1, 0),
+        ObservacionOption(55, "55-Acometida sin protección mecánica (bastón)", 1, 0),
+        ObservacionOption(56, "56-Sin deficiencia por código 66 o 67", 1, 1),
+        ObservacionOption(57, "57-Medidor interior CON LECTURA", 1, 1),
+        ObservacionOption(
+            58,
+            "60-Caja porta medidor polimérica amarilla o empañada CON LECTURA",
+            1,
+            1
+        ),
 
         )
     var hasCameraPermission by remember { mutableStateOf(false) }
@@ -364,26 +421,26 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 ),
             ) {
-                Column{
+                Column {
                     Text(
                         text = buildAnnotatedString {
-                            withStyle(style = SpanStyle(color = Color.Black)) {
+                            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
                                 append(detalle!!.contrato.toString())
                             }
                             append(" | ")
-                            withStyle(style = SpanStyle(color = Color.Blue)) {
+                            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
                                 append(detalle!!.ruta)
                             }
                             append(" | ")
-                            withStyle(style = SpanStyle(color = Color.Gray)) {
+                            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
                                 append(detalle!!.nombres)
                             }
                             append(" | ")
-                            withStyle(style = SpanStyle(color = Color.Gray)) {
+                            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
                                 append(detalle!!.direccion)
                             }
                             append(" | ")
-                            withStyle(style = SpanStyle(color = Color.Gray)) {
+                            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
                                 append(detalle!!.nim)
                             }
                         },
@@ -395,7 +452,7 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                     verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "Lectura: ",
@@ -428,7 +485,10 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                             .align(Alignment.CenterStart)
                             .padding(horizontal = 1.dp, vertical = 1.dp),
                         singleLine = true,
-                        textStyle = TextStyle(fontSize = 18.sp)
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     )
                 }
             }
@@ -444,6 +504,7 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                     modifier = Modifier
                         .padding(start = 8.dp, top = 0.dp, bottom = 5.dp)
                         .weight(0.4f)
+
                 )
 
                 Box(
@@ -459,16 +520,16 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                         onValueChange = {
                             observacionText = it
                             viewModel.setObservacion(0)
-
-
-
                         },
                         modifier = Modifier
                             .height(height = 32.dp)
                             .fillMaxWidth()
                             .padding(horizontal = 1.dp, vertical = 1.dp),
                         singleLine = true,
-                        textStyle = TextStyle(fontSize = 18.sp)
+                        textStyle = TextStyle(
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     )
                 }
 
@@ -478,6 +539,10 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                         .weight(0.1f)
                         .height(32.dp),
                     onClick = { showObservacionDialog = true },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
                     Text(".")
                 }
@@ -495,8 +560,11 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                         onTakePhotoClick()
                         viewModel.setFotoTipo(1)
                         buttonEnabledFotoPanoramica = true
-
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
 
                 ) {
                     Text("Foto \nLectura")
@@ -507,14 +575,18 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                         onTakePhotoClick()
                         viewModel.setFotoTipo(2)
                         buttonEnabledGrabar = true
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
                     Text("Foto \nPanoramica")
                 }
                 Button(
                     enabled = buttonEnabledGrabar,
                     onClick = {
-                        if(lectura.equals("")){
+                        if (lectura.equals("")) {
                             Toast.makeText(context, "Ingrese lectura", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
@@ -528,12 +600,13 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                             return@Button
                         }*/
 
-                        if(viewModel.imagenesCapturadas.size < 2){
-                            Toast.makeText(context, "Ingrese foto lectura", Toast.LENGTH_SHORT).show()
+                        if (viewModel.imagenesCapturadas.size < 2) {
+                            Toast.makeText(context, "Ingrese foto lectura", Toast.LENGTH_SHORT)
+                                .show()
                             return@Button
                         }
 
-                        /*when {
+                        when {
                             ContextCompat.checkSelfPermission(
                                 context,
                                 android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -544,9 +617,9 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                                 }
                             }
                             else -> {
-                                requestPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                                //requestPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
                             }
-                        }*/
+                        }
 
                         val currentDateTime = LocalDateTime.now()
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -560,7 +633,8 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                             observacion.toString(),
                             location?.latitude ?: 0.0,
                             location?.longitude ?: 0.0,
-                            formatted)
+                            formatted
+                        )
 
                         viewModel.GetDetalleById(detalle!!.id)
 
@@ -572,21 +646,23 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
 
 
                         var detalles2 = viewModel.GetDetalleNoEnviado()
-                        for(detalle in detalles2) {
+                        for (detalle in detalles2) {
                             viewModel.SaveDetalle(detalle)
                             viewModel.DetalleEnviado(detalle.uniqueId)
                         }
                         Toast.makeText(context, "Lectura grabada", Toast.LENGTH_SHORT).show()
                         var siguiente = viewModel.siguiente(detalle!!.id)
-                        if(siguiente != null){
+                        if (siguiente != null) {
                             navController.navigate("suministro/" + siguiente!!.id.toString())
-                        }
-                        else{
+                        } else {
                             navController.navigate("list/" + detalle!!.inspeccionId.toString())
                         }
 
                     },
-
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                     ) {
                     Text("Grabar")
                 }
@@ -681,7 +757,12 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
                                     onCreate(null)
                                     getMapAsync { googleMap ->
                                         val location = LatLng(detalle!!.latitud, detalle!!.longitud)
-                                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
+                                        googleMap.moveCamera(
+                                            CameraUpdateFactory.newLatLngZoom(
+                                                location,
+                                                15f
+                                            )
+                                        )
                                         googleMap.addMarker(MarkerOptions().position(location))
                                     }
                                 }
@@ -697,7 +778,10 @@ fun SuministroScreen(navController: NavController, id: Int, viewModel: Suministr
     }
 }
 
-fun getLocation(fusedLocationClient: com.google.android.gms.location.FusedLocationProviderClient, onLocationResult: (Location) -> Unit) {
+fun getLocation(
+    fusedLocationClient: com.google.android.gms.location.FusedLocationProviderClient,
+    onLocationResult: (Location) -> Unit
+) {
     try {
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location: Location? ->
@@ -720,19 +804,23 @@ fun processImage90(bitmap: Bitmap, suministro: String): Bitmap {
         textSize = mutableBitmap.width * 0.05f // Tamaño del texto relativo al ancho de la imagen
         isAntiAlias = true
         style = Paint.Style.FILL
-        setShadowLayer(5f, 2f, 2f, android.graphics.Color.BLACK) // Sombra para mejorar la legibilidad
+        setShadowLayer(
+            5f,
+            2f,
+            2f,
+            android.graphics.Color.BLACK
+        ) // Sombra para mejorar la legibilidad
         textAlign = Paint.Align.RIGHT
     }
     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
     val dateTime = dateFormat.format(Date())
     val x = mutableBitmap.width - 20f
     val y = mutableBitmap.height - 20f
-    canvas.drawText(suministro+"    "+dateTime, x, y, paint)
+    canvas.drawText(suministro + "    " + dateTime, x, y, paint)
     return mutableBitmap
 }
 
 fun processImage(bitmap: Bitmap, suministro: String): Bitmap {
-
 
 
     val mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
@@ -742,14 +830,19 @@ fun processImage(bitmap: Bitmap, suministro: String): Bitmap {
         textSize = mutableBitmap.width * 0.05f // Tamaño del texto relativo al ancho de la imagen
         isAntiAlias = true
         style = Paint.Style.FILL
-        setShadowLayer(5f, 2f, 2f, android.graphics.Color.BLACK) // Sombra para mejorar la legibilidad
+        setShadowLayer(
+            5f,
+            2f,
+            2f,
+            android.graphics.Color.BLACK
+        ) // Sombra para mejorar la legibilidad
         textAlign = Paint.Align.RIGHT
     }
     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
     val dateTime = dateFormat.format(Date())
     val x = mutableBitmap.width - 20f
     val y = mutableBitmap.height - 20f
-    canvas.drawText(suministro+"    "+dateTime, x, y, paint)
+    canvas.drawText(suministro + "    " + dateTime, x, y, paint)
     return mutableBitmap
 }
 
@@ -816,7 +909,6 @@ fun ObservacionDialog(
         }
     }
 }
-
 
 
 //@Preview(showBackground = true)

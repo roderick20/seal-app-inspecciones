@@ -421,17 +421,29 @@ fun DetalleLibroScreen(navController: NavController, inspeccion: Int, viewModel:
 
 @Composable
 fun ListItem1(item: Detalle, onClick: () -> Unit) {
+//    val backgroundColor = if (item.actualizado == 0) {
+//        MaterialTheme.colorScheme.surfaceVariant
+//    } else {
+//        MaterialTheme.colorScheme.secondaryContainer
+//    }
     val backgroundColor = if (item.actualizado == 0) {
-        MaterialTheme.colorScheme.surfaceVariant
+        MaterialTheme.colorScheme.surface
     } else {
-        MaterialTheme.colorScheme.secondaryContainer
+        MaterialTheme.colorScheme.primaryContainer
     }
+
+    val borderColor = if (item.actualizado == 0) {
+        MaterialTheme.colorScheme.outline
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable(onClick = onClick),
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+        border = BorderStroke(2.dp, borderColor),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor,
         )
@@ -439,30 +451,28 @@ fun ListItem1(item: Detalle, onClick: () -> Unit) {
         Column() {
             Text(
                 text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color.Black)) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
                         append(item.contrato.toString())
                     }
                     append(" | ")
-                    withStyle(style = SpanStyle(color = Color.Blue)) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
                         append(item.ruta)
                     }
                     append(" | ")
-                    withStyle(style = SpanStyle(color = Color.Gray)) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
                         append(item.nombres)
                     }
                     append(" | ")
-                    withStyle(style = SpanStyle(color = Color.Gray)) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
                         append(item.direccion)
                     }
                     append(" | ")
-                    withStyle(style = SpanStyle(color = Color.Gray)) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
                         append(item.nim)
                     }
-
-                }, modifier = Modifier.padding(start = 16.dp, top = 5.dp, bottom = 5.dp)
+                },
+                modifier = Modifier.padding(start = 16.dp, top = 5.dp, bottom = 5.dp)
             )
-
-
         }
     }
 }
