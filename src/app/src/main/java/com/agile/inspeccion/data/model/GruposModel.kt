@@ -9,19 +9,13 @@ import androidx.lifecycle.viewModelScope
 import com.agile.inspeccion.data.database.DatabaseHelper
 import com.agile.inspeccion.data.database.Foto
 import com.agile.inspeccion.data.service.Detalle
-import com.agile.inspeccion.data.service.Grupo
 import com.agile.inspeccion.data.service.RetrofitClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.agile.inspeccion.data.database.Result
-//import kotlin.io.encoding.Base64
-import android.util.Base64
-import com.agile.inspeccion.data.service.SaveResult
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
+
 
 class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() {
     var isLoading by mutableStateOf(false)

@@ -90,7 +90,7 @@ fun CameraCapture(onPhotoTaken: (Bitmap) -> Unit) {
                      onPhotoTaken = { image -> onPhotoTaken(image) }
                 )
             }) {
-                Text(text = "Take picture")
+                Text(text = "Tomar Foto")
             }
         }
     }) {
