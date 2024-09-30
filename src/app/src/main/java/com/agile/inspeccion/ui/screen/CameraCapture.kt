@@ -57,12 +57,8 @@ fun CameraCapture(onPhotoTaken: (Bitmap) -> Unit) {
     var isFlashEnabled by remember { mutableStateOf(false) }
     var isUsingFrontCamera by remember { mutableStateOf(false) }
     var zoom by remember { mutableStateOf(ZoomLevel.X1) }
-
-    //var capturedImage by remember { mutableStateOf<Bitmap?>(null) }
-
+    var isTorchEnabled by remember { mutableStateOf(false) }
     val isLandscape = remember { mutableStateOf(isLandscapeOrientation(context)) }
-
-
     val imageCapture = remember {
         ImageCapture.Builder()
             .build()
@@ -80,6 +76,7 @@ fun CameraCapture(onPhotoTaken: (Bitmap) -> Unit) {
             it.unbindAll()
             val camera = it.bindToLifecycle(lifecycleOwner, cameraSelector, imageCapture, preview)
             camera.cameraControl.setLinearZoom(zoom.factor)
+            camera.cameraControl.enableTorch(isTorchEnabled)
         }
     }
 
@@ -103,11 +100,13 @@ fun CameraCapture(onPhotoTaken: (Bitmap) -> Unit) {
                 CameraUIControls(
                     isFlashEnabled,
                     isUsingFrontCamera,
-                    zoom
-                ) { newFlashEnabled, newFrontCamera, newZoom ->
+                    zoom,
+                    isTorchEnabled
+                ) { newFlashEnabled, newFrontCamera, newZoom, newTorchEnabled ->
                     isFlashEnabled = newFlashEnabled
                     isUsingFrontCamera = newFrontCamera
                     zoom = newZoom
+                    isTorchEnabled = newTorchEnabled
                 }
             }
             AndroidView(
@@ -128,16 +127,17 @@ private fun CameraUIControls(
     isFlashEnabled: Boolean,
     isUsingFrontCamera: Boolean,
     zoom: ZoomLevel,
-    updateStates: (Boolean, Boolean, ZoomLevel) -> Unit
+    isTorchEnabled: Boolean,
+    updateStates: (Boolean, Boolean, ZoomLevel, Boolean) -> Unit
 ) {
     Row(modifier = Modifier.padding(8.dp)) {
-        IconButton(onClick = { updateStates(!isFlashEnabled, isUsingFrontCamera, zoom) }) {
+        IconButton(onClick = { updateStates(!isFlashEnabled, isUsingFrontCamera, zoom, isTorchEnabled) }) {
             Icon(
                 imageVector = if (isFlashEnabled) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
                 contentDescription = "Toggle Flash"
             )
         }
-        IconButton(onClick = { updateStates(isFlashEnabled, !isUsingFrontCamera, zoom) }) {
+        IconButton(onClick = { updateStates(isFlashEnabled, !isUsingFrontCamera, zoom, isTorchEnabled) }) {
             Icon(imageVector = Icons.Filled.FlipCameraAndroid, contentDescription = "Switch Camera")
         }
         Button(onClick = {
@@ -145,10 +145,16 @@ private fun CameraUIControls(
                 ZoomLevel.X1 -> ZoomLevel.X2
                 ZoomLevel.X2 -> ZoomLevel.X1
             }
-            updateStates(isFlashEnabled, isUsingFrontCamera, newZoom)
+            updateStates(isFlashEnabled, isUsingFrontCamera, newZoom, isTorchEnabled)
         }) {
             Text(text = zoom.name)
         }
+        /*IconButton(onClick = { updateStates(isFlashEnabled, isUsingFrontCamera, zoom, !isTorchEnabled) }) {
+            Icon(
+                imageVector = if (isTorchEnabled) Icons.Filled.FlashOn else Icons.Filled.FlashOff,
+                contentDescription = "Toggle Torch"
+            )
+        }*/
     }
 }
 

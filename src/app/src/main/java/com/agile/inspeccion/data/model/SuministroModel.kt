@@ -14,6 +14,7 @@ import com.agile.inspeccion.data.service.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 
 data class DetalleImagen(
     val foto: Bitmap,
@@ -159,6 +160,25 @@ class SuministroModel (private val databaseHelper: DatabaseHelper, private val i
             //_isLoading.value = true
             try {
                 _detalle.value = databaseHelper.getDetalleById(inspeccionId)
+
+                _reset.value = _detalle.value?.reset ?: ""
+                _mdhfpa.value = _detalle.value?.mdhfpa ?: ""
+                _eatp.value = _detalle.value?.eatp ?: ""
+                _eahpp.value = _detalle.value?.eahpp ?: ""
+                _mdhpp.value = _detalle.value?.mdhpp ?: ""
+                _mdhpa.value = _detalle.value?.mdhpa ?: ""
+                _eahfpp.value = _detalle.value?.eahfpp ?: ""
+                _mdhfpp.value = _detalle.value?.mdhfpp ?: ""
+                _erp.value = _detalle.value?.erp ?: ""
+                _eatc.value = _detalle.value?.eatc ?: ""
+                _eahpc.value = _detalle.value?.eahpc ?: ""
+                _mdhpc.value = _detalle.value?.mdhpc ?: ""
+                _eahfpc.value = _detalle.value?.eahfpc ?: ""
+                _mdhfpc.value = _detalle.value?.mdhfpc ?: ""
+                _erc.value = _detalle.value?.erc ?: ""
+                _observacion.value = _detalle.value?.observacion ?: 0
+
+
             } catch (e: Exception) {
                 error = "Error: ${e.message}"
             } finally {
@@ -180,11 +200,43 @@ class SuministroModel (private val databaseHelper: DatabaseHelper, private val i
         _imagenesCapturadas.value = _imagenesCapturadas.value - bitmap
     }
 
+    fun SendVideo(detalleid: String, tempFile: File, mimeType: String) {
+        //_error.value = ""
+        viewModelScope.launch {
+            //var file = Base64.encodeToString(foto.foto, Base64.NO_WRAP);
+            try {
+                RetrofitClient.uploadFileVideo(detalleid, tempFile, mimeType )
+
+            } catch (e: Exception) {
+                //_error.value = "Error: ${e.message}"
+            } finally {
+                //_isLoading.value = false
+            }
+
+        }
+
+    }
+
     fun SaveDetalle(detalle: Detalle) {
         viewModelScope.launch {
             //_isLoading.value = true
             try {
-                RetrofitClient.grabarGrabarApi.grabar("login", detalle.uniqueId, detalle.lectura, detalle.observacion.toString(), detalle.fechaSave, detalle.latitudSave.toString(), detalle.longitudSave.toString())
+                RetrofitClient.grabarGrabarApi.grabar("login", detalle.uniqueId, detalle.lectura, detalle.observacion.toString(), detalle.fechaSave, detalle.latitudSave.toString(), detalle.longitudSave.toString(),
+                    detalle.reset,
+                    detalle.mdhfpa,
+                    detalle.eatp,
+                    detalle.eahpp,
+                    detalle.mdhpp,
+                    detalle.mdhpa,
+                    detalle.eahfpp,
+                    detalle.mdhfpp,
+                    detalle.erp,
+                    detalle.eatc,
+                    detalle.eahpc,
+                    detalle.mdhpc,
+                    detalle.eahfpc,
+                    detalle.mdhfpc,
+                    detalle.erc)
             } catch (e: Exception) {
                 var error = "Error: ${e.message}"
             } finally {
@@ -248,12 +300,48 @@ class SuministroModel (private val databaseHelper: DatabaseHelper, private val i
         _imagenAmpliada.value = null
     }
 
-    fun updateDetalle(id: Int, lectura: String, observacion: String, latitudSave: Double, longitudSave: Double, fechaSave: String) {
-        databaseHelper.updateDetalle(id, lectura, observacion, latitudSave, longitudSave, fechaSave)
+    fun updateDetalle(id: Int, lectura: String, observacion: String, latitudSave: Double, longitudSave: Double, fechaSave: String,reset: String,
+                      mdhfpa: String,
+                      eatp: String,
+                      eahpp: String,
+                      mdhpp: String,
+                      mdhpa: String,
+                      eahfpp: String,
+                      mdhfpp: String,
+                      erp: String,
+                      eatc: String,
+                      eahpc: String,
+                      mdhpc: String,
+                      eahfpc: String,
+                      mdhfpc: String,
+                      erc: String,
+                      tipolec: String,
+    tipolecman: String) {
+        databaseHelper.updateDetalle(id, lectura, observacion, latitudSave, longitudSave, fechaSave,reset,
+            mdhfpa,
+            eatp,
+            eahpp,
+            mdhpp,
+            mdhpa,
+            eahfpp,
+            mdhfpp,
+            erp,
+            eatc,
+            eahpc,
+            mdhpc,
+            eahfpc,
+            mdhfpc,
+            erc,
+            tipolec,
+            tipolecman)
     }
 
     fun addImage(foto: Bitmap, detalleid: Int, tipo: Int){
         databaseHelper.addImage( foto, detalleid, tipo   )
+    }
+
+    fun addVideo( detalleid: Int, ruta: String){
+        databaseHelper.addVideo(detalleid, ruta)
     }
 
     fun siguiente(id: Int): Detalle? {

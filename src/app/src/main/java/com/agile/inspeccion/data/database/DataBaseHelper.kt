@@ -35,8 +35,8 @@ data class Foto(
 class DatabaseHelper(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
-        private const val DATABASE_NAME = "seal4.db"
-        private const val DATABASE_VERSION = 13
+        private const val DATABASE_NAME = "seal7.db"
+        private const val DATABASE_VERSION = 17
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -45,11 +45,12 @@ class DatabaseHelper(context: Context) :
             CREATE TABLE grupo (
                 inspeccion INTEGER,
                 tecnicoId INTEGER,
-                cantidad INTEGER
-               
+                cantidad INTEGER,
+                tipo String
             )
         """
         )
+//tipo = IN, GI
 
         db.execSQL(
             """
@@ -75,7 +76,27 @@ class DatabaseHelper(context: Context) :
                 fechaSave  TEXT DEFAULT '',
                 actualizado INTEGER  DEFAULT 0,
                 enviado INTEGER  DEFAULT 0,
-                observado INTEGER  DEFAULT 0
+                observado INTEGER  DEFAULT 0,
+                
+                reset  TEXT DEFAULT '',
+                mdhfpa  TEXT DEFAULT '',
+                eatp  TEXT DEFAULT '',
+                eahpp  TEXT DEFAULT '',
+                mdhpp  TEXT DEFAULT '',
+                mdhpa  TEXT DEFAULT '',
+                eahfpp  TEXT DEFAULT '',
+                mdhfpp  TEXT DEFAULT '',
+                erp  TEXT DEFAULT '',
+                eatc  TEXT DEFAULT '',
+                eahpc  TEXT DEFAULT '',
+                mdhpc  TEXT DEFAULT '',
+                eahfpc  TEXT DEFAULT '',
+                mdhfpc  TEXT DEFAULT '',
+                erc  TEXT DEFAULT '',
+                
+                tipolec TEXT DEFAULT '',
+                tipolecman TEXT DEFAULT '',
+                sed TEXT DEFAULT ''
             )
         """
         )
@@ -91,13 +112,34 @@ class DatabaseHelper(context: Context) :
             )
         """
         )
+
+        db.execSQL(
+            """
+            CREATE TABLE video (
+                id  INTEGER PRIMARY KEY AUTOINCREMENT,
+                detalleid INTEGER,
+                ruta TEXT
+            )
+        """
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS grupo")
         db.execSQL("DROP TABLE IF EXISTS detalle")
         db.execSQL("DROP TABLE IF EXISTS detalleImagen")
+        db.execSQL("DROP TABLE IF EXISTS video")
         onCreate(db)
+    }
+
+    fun addVideo( detalleid: Int, ruta: String): Long {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put("detalleid", detalleid)
+        values.put("ruta", ruta)
+        val id = db.insert("video", null, values)
+        db.close()
+        return id
     }
 
     fun addImage(foto: Bitmap, detalleid: Int, tipo: Int): Long {
@@ -147,8 +189,8 @@ class DatabaseHelper(context: Context) :
     fun insertGrupo(grupo: Grupo) {
         writableDatabase.use { db ->
             db.execSQL(
-                "INSERT INTO grupo (inspeccion, tecnicoId, cantidad) VALUES (?, ?, ?)",
-                arrayOf(grupo.inspeccion, grupo.tecnicoId, grupo.cantidad)
+                "INSERT INTO grupo (inspeccion, tecnicoId, cantidad, tipo) VALUES (?, ?, ?, ?)",
+                arrayOf(grupo.inspeccion, grupo.tecnicoId, grupo.cantidad, grupo.tipo)
             )
         }
     }
@@ -164,7 +206,8 @@ class DatabaseHelper(context: Context) :
                     val grupo = Grupo(
                         it.getInt(it.getColumnIndexOrThrow("inspeccion")),
                         it.getInt(it.getColumnIndexOrThrow("tecnicoId")),
-                        it.getInt(it.getColumnIndexOrThrow("cantidad"))
+                        it.getInt(it.getColumnIndexOrThrow("cantidad")),
+                        it.getString(it.getColumnIndexOrThrow("tipo"))
                     )
                     grupoList.add(grupo)
                 } while (it.moveToNext())
@@ -179,8 +222,11 @@ class DatabaseHelper(context: Context) :
 
 
                 db.execSQL(
-                    "INSERT INTO detalle (id, uniqueId, contrato, medidor, nombres, ruta, direccion, nim, inspeccionId, latitud, longitud, tecnicoAsignado, lectura, observacion, latitudSave, longitudSave, fechaSave, actualizado, enviado,observado) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,   ?,?,?,?,?,?,?,?)",
+                    "INSERT INTO detalle (id, uniqueId, contrato, medidor, nombres, ruta, direccion, nim, inspeccionId, latitud, longitud, tecnicoAsignado, lectura, observacion, latitudSave, longitudSave, fechaSave, actualizado, enviado,observado,reset,mdhfpa,eatp,eahpp,mdhpp,mdhpa,eahfpp,mdhfpp,erp,eatc,eahpc,mdhpc,eahfpc,mdhfpc,erc,tipolec,tipolecman, sed) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,   ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+
+
+
                     arrayOf(
                         detalle.id,
                         detalle.uniqueId,
@@ -202,7 +248,7 @@ class DatabaseHelper(context: Context) :
                         "",
                         0,
                         0,
-                        0
+                        0,"","","","","","","","","","","","","","","","","",detalle.sed
                     )
                 )
             }
@@ -262,7 +308,25 @@ class DatabaseHelper(context: Context) :
                         it.getString(it.getColumnIndexOrThrow("fechaSave")),
                         it.getInt(it.getColumnIndexOrThrow("actualizado")),
                         it.getInt(it.getColumnIndexOrThrow("enviado")),
+                        it.getString(it.getColumnIndexOrThrow("reset")),
+                        it.getString(it.getColumnIndexOrThrow("mdhfpa")),
+                        it.getString(it.getColumnIndexOrThrow("eatp")),
+                        it.getString(it.getColumnIndexOrThrow("eahpp")),
+                        it.getString(it.getColumnIndexOrThrow("mdhpp")),
+                        it.getString(it.getColumnIndexOrThrow("mdhpa")),
+                        it.getString(it.getColumnIndexOrThrow("eahfpp")),
+                        it.getString(it.getColumnIndexOrThrow("mdhfpp")),
+                        it.getString(it.getColumnIndexOrThrow("erp")),
+                        it.getString(it.getColumnIndexOrThrow("eatc")),
+                        it.getString(it.getColumnIndexOrThrow("eahpc")),
+                        it.getString(it.getColumnIndexOrThrow("mdhpc")),
+                        it.getString(it.getColumnIndexOrThrow("eahfpc")),
+                        it.getString(it.getColumnIndexOrThrow("mdhfpc")),
+                        it.getString(it.getColumnIndexOrThrow("erc")),
 
+                        it.getString(it.getColumnIndexOrThrow("tipolec")),
+                        it.getString(it.getColumnIndexOrThrow("tipolecman")),
+                        it.getString(it.getColumnIndexOrThrow("sed")),
                         )
                     operacionList.add(operacion)
                 } while (it.moveToNext())
@@ -275,7 +339,7 @@ class DatabaseHelper(context: Context) :
         val operacionList = mutableListOf<Detalle>()
         val selectQuery = "SELECT * FROM Detalle WHERE enviado = ?  AND actualizado = 1"
         val db = this.readableDatabase
-        val cursor = db.rawQuery(selectQuery, arrayOf("0".toString()))
+        val cursor = db.rawQuery(selectQuery, arrayOf("0"))
         cursor.use {
             if (it.moveToFirst()) {
                 do {
@@ -299,7 +363,24 @@ class DatabaseHelper(context: Context) :
                         it.getString(it.getColumnIndexOrThrow("fechaSave")),
                         it.getInt(it.getColumnIndexOrThrow("actualizado")),
                         it.getInt(it.getColumnIndexOrThrow("enviado")),
-
+                        it.getString(it.getColumnIndexOrThrow("reset")),
+                        it.getString(it.getColumnIndexOrThrow("mdhfpa")),
+                        it.getString(it.getColumnIndexOrThrow("eatp")),
+                        it.getString(it.getColumnIndexOrThrow("eahpp")),
+                        it.getString(it.getColumnIndexOrThrow("mdhpp")),
+                        it.getString(it.getColumnIndexOrThrow("mdhpa")),
+                        it.getString(it.getColumnIndexOrThrow("eahfpp")),
+                        it.getString(it.getColumnIndexOrThrow("mdhfpp")),
+                        it.getString(it.getColumnIndexOrThrow("erp")),
+                        it.getString(it.getColumnIndexOrThrow("eatc")),
+                        it.getString(it.getColumnIndexOrThrow("eahpc")),
+                        it.getString(it.getColumnIndexOrThrow("mdhpc")),
+                        it.getString(it.getColumnIndexOrThrow("eahfpc")),
+                        it.getString(it.getColumnIndexOrThrow("mdhfpc")),
+                        it.getString(it.getColumnIndexOrThrow("erc")),
+                        it.getString(it.getColumnIndexOrThrow("tipolec")),
+                        it.getString(it.getColumnIndexOrThrow("tipolecman")),
+                        it.getString(it.getColumnIndexOrThrow("sed")),
                         )
                     operacionList.add(operacion)
                 } while (it.moveToNext())
@@ -308,7 +389,7 @@ class DatabaseHelper(context: Context) :
         return operacionList
     }
 
-    fun getGrupo(): List<Result> {
+    fun getGrupo(tipo: String): List<Result> {
         val operacionList = mutableListOf<Result>()
         val selectQuery = """
             SELECT 
@@ -356,11 +437,11 @@ LEFT JOIN (
         detalleImagen di ON d.id = di.detalleid
     GROUP BY 
         d.inspeccionId
-) di ON g.inspeccion = di.inspeccionId;
+) di ON g.inspeccion = di.inspeccionId WHERE tipo = ?;
 
         """.trimIndent()
         val db = this.readableDatabase
-        val cursor = db.rawQuery(selectQuery, arrayOf())
+        val cursor = db.rawQuery(selectQuery, arrayOf(tipo))
         cursor.use {
             if (it.moveToFirst()) {
                 do {
@@ -408,7 +489,25 @@ LEFT JOIN (
                     it.getString(it.getColumnIndexOrThrow("fechaSave")),
                     it.getInt(it.getColumnIndexOrThrow("actualizado")),
                     it.getInt(it.getColumnIndexOrThrow("enviado")),
-                )
+                    it.getString(it.getColumnIndexOrThrow("reset")),
+                    it.getString(it.getColumnIndexOrThrow("mdhfpa")),
+                    it.getString(it.getColumnIndexOrThrow("eatp")),
+                    it.getString(it.getColumnIndexOrThrow("eahpp")),
+                    it.getString(it.getColumnIndexOrThrow("mdhpp")),
+                    it.getString(it.getColumnIndexOrThrow("mdhpa")),
+                    it.getString(it.getColumnIndexOrThrow("eahfpp")),
+                    it.getString(it.getColumnIndexOrThrow("mdhfpp")),
+                    it.getString(it.getColumnIndexOrThrow("erp")),
+                    it.getString(it.getColumnIndexOrThrow("eatc")),
+                    it.getString(it.getColumnIndexOrThrow("eahpc")),
+                    it.getString(it.getColumnIndexOrThrow("mdhpc")),
+                    it.getString(it.getColumnIndexOrThrow("eahfpc")),
+                    it.getString(it.getColumnIndexOrThrow("mdhfpc")),
+                    it.getString(it.getColumnIndexOrThrow("erc")),
+                    it.getString(it.getColumnIndexOrThrow("tipolec")),
+                    it.getString(it.getColumnIndexOrThrow("tipolecman")),
+                    it.getString(it.getColumnIndexOrThrow("sed")),
+                    )
             } else null
         }
     }
@@ -440,7 +539,25 @@ LEFT JOIN (
                     it.getString(it.getColumnIndexOrThrow("fechaSave")),
                     it.getInt(it.getColumnIndexOrThrow("actualizado")),
                     it.getInt(it.getColumnIndexOrThrow("enviado")),
-                )
+                    it.getString(it.getColumnIndexOrThrow("reset")),
+                    it.getString(it.getColumnIndexOrThrow("mdhfpa")),
+                    it.getString(it.getColumnIndexOrThrow("eatp")),
+                    it.getString(it.getColumnIndexOrThrow("eahpp")),
+                    it.getString(it.getColumnIndexOrThrow("mdhpp")),
+                    it.getString(it.getColumnIndexOrThrow("mdhpa")),
+                    it.getString(it.getColumnIndexOrThrow("eahfpp")),
+                    it.getString(it.getColumnIndexOrThrow("mdhfpp")),
+                    it.getString(it.getColumnIndexOrThrow("erp")),
+                    it.getString(it.getColumnIndexOrThrow("eatc")),
+                    it.getString(it.getColumnIndexOrThrow("eahpc")),
+                    it.getString(it.getColumnIndexOrThrow("mdhpc")),
+                    it.getString(it.getColumnIndexOrThrow("eahfpc")),
+                    it.getString(it.getColumnIndexOrThrow("mdhfpc")),
+                    it.getString(it.getColumnIndexOrThrow("erc")),
+                    it.getString(it.getColumnIndexOrThrow("tipolec")),
+                    it.getString(it.getColumnIndexOrThrow("tipolecman")),
+                    it.getString(it.getColumnIndexOrThrow("sed")),
+                    )
             } else null
         }
     }
@@ -473,7 +590,25 @@ LEFT JOIN (
                         it.getString(it.getColumnIndexOrThrow("fechaSave")),
                         it.getInt(it.getColumnIndexOrThrow("actualizado")),
                         it.getInt(it.getColumnIndexOrThrow("enviado")),
-                    )
+                        it.getString(it.getColumnIndexOrThrow("reset")),
+                        it.getString(it.getColumnIndexOrThrow("mdhfpa")),
+                        it.getString(it.getColumnIndexOrThrow("eatp")),
+                        it.getString(it.getColumnIndexOrThrow("eahpp")),
+                        it.getString(it.getColumnIndexOrThrow("mdhpp")),
+                        it.getString(it.getColumnIndexOrThrow("mdhpa")),
+                        it.getString(it.getColumnIndexOrThrow("eahfpp")),
+                        it.getString(it.getColumnIndexOrThrow("mdhfpp")),
+                        it.getString(it.getColumnIndexOrThrow("erp")),
+                        it.getString(it.getColumnIndexOrThrow("eatc")),
+                        it.getString(it.getColumnIndexOrThrow("eahpc")),
+                        it.getString(it.getColumnIndexOrThrow("mdhpc")),
+                        it.getString(it.getColumnIndexOrThrow("eahfpc")),
+                        it.getString(it.getColumnIndexOrThrow("mdhfpc")),
+                        it.getString(it.getColumnIndexOrThrow("erc")),
+                        it.getString(it.getColumnIndexOrThrow("tipolec")),
+                        it.getString(it.getColumnIndexOrThrow("tipolecman")),
+                        it.getString(it.getColumnIndexOrThrow("sed")),
+                        )
                     operacionList.add(operacion)
                 } while (it.moveToNext())
             }
@@ -500,7 +635,26 @@ LEFT JOIN (
         observacion: String,
         latitudSave: Double,
         longitudSave: Double,
-        fechaSave: String
+        fechaSave: String,
+        reset: String,
+        mdhfpa: String,
+        eatp: String,
+        eahpp: String,
+        mdhpp: String,
+        mdhpa: String,
+        eahfpp: String,
+        mdhfpp: String,
+        erp: String,
+        eatc: String,
+        eahpc: String,
+        mdhpc: String,
+        eahfpc: String,
+        mdhfpc: String,
+        erc: String,
+
+        tipolec: String,
+        tipolecman: String
+
     ): Int {
         val db = this.writableDatabase
         val values = ContentValues().apply {
@@ -510,6 +664,24 @@ LEFT JOIN (
             put("longitudSave", longitudSave)
             put("fechaSave", fechaSave)
             put("actualizado", 1)
+            put("reset", reset)
+            put("mdhfpa", mdhfpa)
+            put("eatp", eatp)
+            put("eahpp", eahpp)
+            put("mdhpp", mdhpp)
+            put("mdhpa", mdhpa)
+            put("eahfpp", eahfpp)
+            put("mdhfpp", mdhfpp)
+            put("erp", erp)
+            put("eatc", eatc)
+            put("eahpc", eahpc)
+            put("mdhpc", mdhpc)
+            put("eahfpc", eahfpc)
+            put("mdhfpc", mdhfpc)
+            put("erc", erc)
+
+            put("tipolec", tipolec)
+            put("tipolecman", tipolecman)
         }
         return db.update("Detalle", values, "id = ?", arrayOf(id.toString()))
     }

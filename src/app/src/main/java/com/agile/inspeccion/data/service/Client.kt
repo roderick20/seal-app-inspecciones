@@ -1,14 +1,18 @@
 package com.agile.inspeccion.data.service
 
 import com.agile.inspeccion.data.database.Foto
+import okhttp3.MediaType
+
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
@@ -18,7 +22,7 @@ object RetrofitClient {
         //.writeTimeout(60, TimeUnit.SECONDS)
 
         .baseUrl("https://operacionessealapi.seal.com.pe/")
-        //.baseUrl("https://86cf-191-98-137-123.ngrok-free.app/")
+        //.baseUrl("https://f8e4-2001-1388-49ea-51f-903d-de18-f0d4-119e.ngrok-free.app/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
@@ -30,7 +34,7 @@ object RetrofitClient {
 
     val grabarGrabarApi: GrabarGrabarApi = retrofit.create(GrabarGrabarApi::class.java)
 
-    val grabarFotoApi: GrabarFotoApi = retrofit.create(GrabarFotoApi::class.java)
+    //val grabarFotoApi: GrabarFotoApi = retrofit.create(GrabarFotoApi::class.java)
 
     val observationApi: ObservationApi = retrofit.create(ObservationApi::class.java)
 
@@ -54,10 +58,26 @@ object RetrofitClient {
                     println("Error en la subida: ${response.errorBody()?.string()}")
                 }
             }
-
             override fun onFailure(call: Call<String>, t: Throwable) {
                 println("Fallo en la subida: ${t.message}")
             }
         })*/
+    }
+
+    suspend fun uploadFileVideo(detalleid: String, tempFile: File, mimeType: String) {
+
+        val requestFile = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
+        val videoPart = MultipartBody.Part.createFormData("file", tempFile.name, requestFile)
+
+        val detalleIdBody = detalleid.toRequestBody("text/plain".toMediaTypeOrNull())
+        /*val tipoBody = foto.tipo.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+
+        val requestBody = foto.foto.toRequestBody(mimeType.toMediaTypeOrNull())
+        val filePart = MultipartBody.Part.createFormData("file", fileName, requestBody)*/
+
+        val apiService = retrofit.create(GrabarVideoApi::class.java)
+        val call = apiService.grabar(detalleIdBody, videoPart)
+
+
     }
 }

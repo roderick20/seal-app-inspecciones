@@ -59,6 +59,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -456,12 +457,19 @@ fun ListItem1(item: Detalle, onClick: () -> Unit) {
         Column() {
             Text(
                 text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
+                    withStyle(style = SpanStyle(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold
+                    )) {
                         append(item.contrato.toString())
                     }
                     append(" | ")
                     withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
                         append(item.ruta)
+                    }
+                    append(" | ")
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+                        append(item.sed)
                     }
                     append(" | ")
                     withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {

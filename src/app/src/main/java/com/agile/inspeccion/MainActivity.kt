@@ -80,7 +80,7 @@ fun MyApp(nombre: String, login: String, databaseHelper: DatabaseHelper) {
 
 
 
-            val viewModel: GruposViewModel = viewModel { GruposViewModel(databaseHelper) }
+            val viewModel: GruposViewModel = viewModel { GruposViewModel(databaseHelper, "IN") }
             InspeccionMain(navController, _nombre, _login, viewModel)
         }
         composable(
@@ -102,7 +102,7 @@ fun MyApp(nombre: String, login: String, databaseHelper: DatabaseHelper) {
         }
         //------------------------------------------------------------------------------------------
         composable("GranIndustriaMain") {
-            val viewModel: GruposViewModel = viewModel { GruposViewModel(databaseHelper) }
+            val viewModel: GruposViewModel = viewModel { GruposViewModel(databaseHelper, "GI") }
             GranIndustriaMain(navController, _nombre, _login, viewModel)
         }
         composable(

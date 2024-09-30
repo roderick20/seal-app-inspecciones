@@ -100,21 +100,21 @@ fun GranIndustriaMain(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Descargar Inspecciones") },
+                            text = { Text("Descargar Gran Industria") },
                             onClick = {
-                                gruposModel.cargarDatos(login)
+                                gruposModel.cargarDatos(login, "GI")
                                 showMenu = false
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Borrar Inspecciones") },
+                            text = { Text("Borrar Gran Industria") },
                             onClick = {
                                 gruposModel.DeleteAll()
                                 showMenu = false
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Enviar inspeciones") },
+                            text = { Text("Enviar Gran Industria") },
                             onClick = {
                                 var detalles2 = gruposModel.GetDetalleNoEnviado()
                                 for (detalle in detalles2) {
@@ -122,7 +122,7 @@ fun GranIndustriaMain(
                                     gruposModel.DetalleEnviado(detalle.uniqueId)
                                 }
                                 showMenu = false
-                                gruposModel.GetAllGrupo()
+                                gruposModel.GetAllGrupo("GI")
                             }
                         )
                         DropdownMenuItem(
@@ -138,7 +138,7 @@ fun GranIndustriaMain(
                                     }
                                 }
                                 showMenu = false
-                                gruposModel.GetAllGrupo()
+                                gruposModel.GetAllGrupo("GI")
                                 Toast.makeText(context, "Fotos enviadas", Toast.LENGTH_SHORT).show()
                             }
                         )
@@ -258,7 +258,7 @@ fun ListItem(grupo: Result, onClick: () -> Unit) {
                         append("Pendientes[${grupo.pendientes}] - ")
                     }
                     withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
-                        append("Inspeccionados[${grupo.inspeccionados}] - Enviados[${grupo.enviados}] - Fotos[${grupo.imagenes_enviadas + grupo.imagenes_no_enviadas}] - Fotos enviadas[${grupo.imagenes_enviadas}]")
+                        append("Lecturados[${grupo.inspeccionados}] - Enviados[${grupo.enviados}] - Fotos[${grupo.imagenes_enviadas + grupo.imagenes_no_enviadas}] - Fotos enviadas[${grupo.imagenes_enviadas}]")
                     }
                 },
                 modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)

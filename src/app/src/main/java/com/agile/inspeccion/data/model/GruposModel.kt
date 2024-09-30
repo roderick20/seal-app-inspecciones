@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import com.agile.inspeccion.data.database.Result
 
 
-class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() {
+class GruposViewModel(private val databaseHelper: DatabaseHelper, tipo: String) : ViewModel() {
     var isLoading by mutableStateOf(false)
         private set
     var downloadProgress by mutableStateOf(0f)
@@ -34,10 +34,10 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
     val error = _error.asStateFlow()
 
     init {
-        GetAllGrupo()
+        GetAllGrupo(tipo)
     }
 
-    fun cargarDatos(login: String) {
+    fun cargarDatos(login: String, tipo: String) {
         viewModelScope.launch {
             isLoading = true
             downloadProgress = 0f
@@ -45,7 +45,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
             showDownloadDialog = true
             try {
                 downloadStatus = "Descargando libros..."
-                val grupos = RetrofitClient.grupoApi.getGrupos(login)
+                val grupos = RetrofitClient.grupoApi.getGrupos(login, tipo)
                 downloadProgress = 0.2f
 
                 downloadStatus = "Guardando libros..."
@@ -55,7 +55,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
                 val totalBibliotecas = grupos.size
                 grupos.forEachIndexed { index, grupo ->
                     downloadStatus = "Descargando suministro de ${grupo.inspeccion}..."
-                    val detalle = RetrofitClient.detalleApi.getDetalles(login, grupo.inspeccion)
+                    val detalle = RetrofitClient.detalleApi.getDetalles(login, grupo.inspeccion, tipo)
 
                     downloadStatus = "Guardando suministro de ${grupo.inspeccion}..."
                     detalle.forEach { databaseHelper.insertDetalle(it) }
@@ -65,7 +65,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
                 }
                 downloadStatus = "Descarga completada"
                 downloadProgress = 1f
-                GetAllGrupo()
+                GetAllGrupo(tipo)
                 delay(500)
             } catch (e: Exception) {
                 downloadStatus = "Error: ${e.localizedMessage}"
@@ -80,7 +80,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
     }
 
 
-    fun cargarObservacion(login: String) {
+    fun cargarObservacion(login: String, tipo: String) {
         viewModelScope.launch {
             isLoading = true
             downloadProgress = 0f
@@ -98,7 +98,7 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
 
                 downloadStatus = "Descarga completada"
                 downloadProgress = 1f
-                GetAllGrupo()
+                GetAllGrupo(tipo)
                 delay(500)
             } catch (e: Exception) {
                 downloadStatus = "Error: ${e.localizedMessage}"
@@ -113,11 +113,11 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
     }
 
 
-    fun GetAllGrupo() {
+    fun GetAllGrupo(tipo: String) {
         viewModelScope.launch {
             //_isLoading.value = true
             try {
-                _grupos.value = databaseHelper.getGrupo()
+                _grupos.value = databaseHelper.getGrupo(tipo)
             } catch (e: Exception) {
                 //_error.value = "Error: ${e.message}"
             } finally {
@@ -154,11 +154,11 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
         return emptyList()
     }
 
-    fun GetMain() :List<Result> {
+    fun GetMain(tipo: String) :List<Result> {
         //viewModelScope.launch {
         //_isLoading.value = true
         try {
-            return databaseHelper.getGrupo()
+            return databaseHelper.getGrupo(tipo)
         } catch (e: Exception) {
             //_error.value = "Error: ${e.message}"
         } finally {
@@ -172,7 +172,25 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper) : ViewModel() 
         viewModelScope.launch {
             //_isLoading.value = true
             try {
-                RetrofitClient.grabarGrabarApi.grabar("login", detalle.uniqueId, detalle.lectura, detalle.observacion.toString(), detalle.fechaSave, detalle.latitudSave.toString(), detalle.longitudSave.toString())
+                RetrofitClient.grabarGrabarApi.grabar("login", detalle.uniqueId, detalle.lectura,
+                    detalle.observacion.toString(), detalle.fechaSave, detalle.latitudSave.toString(),
+                    detalle.longitudSave.toString(),
+                    detalle.reset,
+                    detalle.mdhfpa,
+                    detalle.eatp,
+                    detalle.eahpp,
+                    detalle.mdhpp,
+                    detalle.mdhpa,
+                    detalle.eahfpp,
+                    detalle.mdhfpp,
+                    detalle.erp,
+                    detalle.eatc,
+                    detalle.eahpc,
+                    detalle.mdhpc,
+                    detalle.eahfpc,
+                    detalle.mdhfpc,
+                    detalle.erc
+                )
             } catch (e: Exception) {
                 var error = "Error: ${e.message}"
             } finally {

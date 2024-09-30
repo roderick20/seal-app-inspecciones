@@ -92,7 +92,7 @@ fun InspeccionMain(navController: NavController, nombre: String, login: String, 
                         DropdownMenuItem(
                             text = { Text("Descargar Inspecciones") },
                             onClick = {
-                                gruposModel.cargarDatos(login)
+                                gruposModel.cargarDatos(login,"IN")
                                 showMenu = false
                             }
                         )
@@ -112,7 +112,7 @@ fun InspeccionMain(navController: NavController, nombre: String, login: String, 
                                     gruposModel.DetalleEnviado(detalle.uniqueId)
                                 }
                                 showMenu = false
-                                 gruposModel.GetAllGrupo()
+                                 gruposModel.GetAllGrupo("IN")
                             }
                         )
                         DropdownMenuItem(
@@ -129,7 +129,7 @@ fun InspeccionMain(navController: NavController, nombre: String, login: String, 
                                     }
                                 }
                                 showMenu = false
-                                gruposModel.GetAllGrupo()
+                                gruposModel.GetAllGrupo("IN")
                                 Toast.makeText(context, "Fotos enviadas", Toast.LENGTH_SHORT).show()
                             }
                         )
