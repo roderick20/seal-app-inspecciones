@@ -112,7 +112,17 @@ fun InspeccionLista(navController: NavController, inspeccion: Int, viewModel: Li
                 result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)
             spokenText?.let {
                 measurement1 = removeNonNumeric(it)
-                viewModel.SearchDetalle("contrato", measurement1)
+                var col: String = "";
+
+                if(selectedOption == "Ruta"){
+                    col = "ruta like '%${measurement1}%'"
+                } else if(selectedOption == "Medidor/MIN"){
+                    col = "medidor like '%${measurement1}%' OR nim like '%${measurement1}%'"
+                }else if(selectedOption == "Suministro"){
+                    col =  "contrato like '%${measurement1}%'"
+                }
+
+                viewModel.SearchDetalle(col)
             }
         }
     }
@@ -358,7 +368,17 @@ fun InspeccionLista(navController: NavController, inspeccion: Int, viewModel: Li
                                 viewModel.GetDetalle(inspeccion, showPending, showInspected, showAll)
                             }
                             else{
-                                viewModel.SearchDetalle("contrato", measurement1)
+                                var col: String = "";
+
+                                if(selectedOption == "Ruta"){
+                                    col = "ruta like '%${measurement1}%'"
+                                } else if(selectedOption == "Medidor/MIN"){
+                                    col = "medidor like '%${measurement1}%' OR nim like '%${measurement1}%'"
+                                }else if(selectedOption == "Suministro"){
+                                    col =  "contrato like '%${measurement1}%'"
+                                }
+
+                                viewModel.SearchDetalle(col)
                             }
 
                             //viewModel.SearchDetalle(selectedOption, it)

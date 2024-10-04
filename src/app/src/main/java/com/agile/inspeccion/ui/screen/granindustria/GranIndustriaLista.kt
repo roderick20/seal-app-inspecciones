@@ -110,7 +110,17 @@ fun GranIndustriaLista (navController: NavController, inspeccion: Int, viewModel
                 result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)
             spokenText?.let {
                 measurement1 = removeNonNumeric(it)
-                viewModel.SearchDetalle("contrato", measurement1)
+                var col: String = "";
+
+                if(selectedOption == "Ruta"){
+                    col = "ruta like '%${measurement1}%'"
+                } else if(selectedOption == "Medidor/MIN"){
+                    col = "medidor like '%${measurement1}%' OR nim like '%${measurement1}%'"
+                }else if(selectedOption == "Suministro"){
+                    col =  "contrato like '%${measurement1}%'"
+                }
+
+                viewModel.SearchDetalle(col)
             }
         }
     }
@@ -356,7 +366,19 @@ fun GranIndustriaLista (navController: NavController, inspeccion: Int, viewModel
                                 viewModel.GetDetalle(inspeccion, showPending, showInspected, showAll)
                             }
                             else{
-                                viewModel.SearchDetalle("contrato", measurement1)
+                                var col: String = "";
+
+                                if(selectedOption == "Ruta"){
+                                    col = "ruta like '%${measurement1}%'"
+                                } else if(selectedOption == "Medidor/MIN"){
+                                    col = "medidor like '%${measurement1}%' OR nim like '%${measurement1}%'"
+                                }else if(selectedOption == "Suministro"){
+                                    col =  "contrato like '%${measurement1}%'"
+                                }
+
+
+
+                                    viewModel.SearchDetalle(col)
                             }
 
                             //viewModel.SearchDetalle(selectedOption, it)
@@ -466,6 +488,10 @@ fun ListItem1(item: Detalle, onClick: () -> Unit) {
                     append(" | ")
                     withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
                         append(item.ruta)
+                    }
+                    append(" | ")
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+                        append(item.medidor)
                     }
                     append(" | ")
                     withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary)) {

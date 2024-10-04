@@ -633,7 +633,7 @@ fun SuministroScreen(
                             observacion.toString(),
                             location?.latitude ?: 0.0,
                             location?.longitude ?: 0.0,
-                            formatted,"","","","","","","","","","","","","","","", "",""
+                            formatted,"","","","","","","","","","","","","","","", "","", "",""
                         )
 
                         viewModel.GetDetalleById(detalle!!.id)

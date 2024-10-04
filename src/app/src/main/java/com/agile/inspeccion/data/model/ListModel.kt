@@ -27,11 +27,11 @@ class ListModel(private val databaseHelper: DatabaseHelper) : ViewModel() {
         }
     }
 
-    fun SearchDetalle(column: String, search: String) {
+    fun SearchDetalle(search: String) {
         viewModelScope.launch {
             //_isLoading.value = true
             try {
-                _detalles.value = databaseHelper.search(column, search)
+                _detalles.value = databaseHelper.search(search)
             } catch (e: Exception) {
                 //_error.value = "Error: ${e.message}"
             } finally {

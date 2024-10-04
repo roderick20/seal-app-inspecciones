@@ -32,11 +32,19 @@ data class Foto(
 
 )
 
+data class Video(
+    val id: Int,
+    val detalleid: Int,
+    val ruta: String
+
+
+)
+
 class DatabaseHelper(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
-        private const val DATABASE_NAME = "seal7.db"
-        private const val DATABASE_VERSION = 17
+        private const val DATABASE_NAME = "seal18.db"
+        private const val DATABASE_VERSION = 18
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -96,7 +104,10 @@ class DatabaseHelper(context: Context) :
                 
                 tipolec TEXT DEFAULT '',
                 tipolecman TEXT DEFAULT '',
-                sed TEXT DEFAULT ''
+                sed TEXT DEFAULT '',
+                
+                ubicacion TEXT DEFAULT '',
+                perfilCarga TEXT DEFAULT ''
             )
         """
         )
@@ -186,6 +197,56 @@ class DatabaseHelper(context: Context) :
         return operacionList
     }
 
+    fun getFotoDetalle(detalleid: Int): List<Foto> {
+        val operacionList = mutableListOf<Foto>()
+        val selectQuery = "SELECT * FROM detalleImagen WHERE detalleid = ?"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, arrayOf(detalleid.toString()))
+        cursor.use {
+            if (it.moveToFirst()) {
+                do {
+                    try{
+                        val operacion = Foto(
+                            it.getInt(it.getColumnIndexOrThrow("id")),
+                            it.getBlob(it.getColumnIndexOrThrow("foto")),
+                            it.getInt(it.getColumnIndexOrThrow("detalleid")),
+                            it.getInt(it.getColumnIndexOrThrow("tipo")),
+                            it.getInt(it.getColumnIndexOrThrow("enviado")),
+
+                            )
+                        operacionList.add(operacion)
+
+                    } catch (e: Exception) {
+                        var _error = "Error: ${e.message}"
+                    }
+                } while (it.moveToNext())
+            }
+        }
+        return operacionList
+    }
+
+    fun getVideoDetalle(detalleid: Int): String {
+
+        val selectQuery = "SELECT * FROM video WHERE detalleid = ?"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, arrayOf(detalleid.toString()))
+        var video: String = ""
+        cursor.use {
+            if (it.moveToFirst()) {
+                do {
+                    try{
+                        video =  it.getString(it.getColumnIndexOrThrow("ruta"))
+
+
+                    } catch (e: Exception) {
+                        var _error = "Error: ${e.message}"
+                    }
+                } while (it.moveToNext())
+            }
+        }
+        return video
+    }
+
     fun insertGrupo(grupo: Grupo) {
         writableDatabase.use { db ->
             db.execSQL(
@@ -222,8 +283,8 @@ class DatabaseHelper(context: Context) :
 
 
                 db.execSQL(
-                    "INSERT INTO detalle (id, uniqueId, contrato, medidor, nombres, ruta, direccion, nim, inspeccionId, latitud, longitud, tecnicoAsignado, lectura, observacion, latitudSave, longitudSave, fechaSave, actualizado, enviado,observado,reset,mdhfpa,eatp,eahpp,mdhpp,mdhpa,eahfpp,mdhfpp,erp,eatc,eahpc,mdhpc,eahfpc,mdhfpc,erc,tipolec,tipolecman, sed) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,   ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    "INSERT INTO detalle (id, uniqueId, contrato, medidor, nombres, ruta, direccion, nim, inspeccionId, latitud, longitud, tecnicoAsignado, lectura, observacion, latitudSave, longitudSave, fechaSave, actualizado, enviado,observado,reset,mdhfpa,eatp,eahpp,mdhpp,mdhpa,eahfpp,mdhfpp,erp,eatc,eahpc,mdhpc,eahfpc,mdhfpc,erc,tipolec,tipolecman, sed,ubicacion,perfilCarga) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,   ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
 
 
 
@@ -248,7 +309,7 @@ class DatabaseHelper(context: Context) :
                         "",
                         0,
                         0,
-                        0,"","","","","","","","","","","","","","","","","",detalle.sed
+                        0,"","","","","","","","","","","","","","","","","",detalle.sed,"",""
                     )
                 )
             }
@@ -327,6 +388,12 @@ class DatabaseHelper(context: Context) :
                         it.getString(it.getColumnIndexOrThrow("tipolec")),
                         it.getString(it.getColumnIndexOrThrow("tipolecman")),
                         it.getString(it.getColumnIndexOrThrow("sed")),
+
+                        it.getString(it.getColumnIndexOrThrow("ubicacion")),
+                        it.getString(it.getColumnIndexOrThrow("perfilCarga")),
+
+
+
                         )
                     operacionList.add(operacion)
                 } while (it.moveToNext())
@@ -381,6 +448,8 @@ class DatabaseHelper(context: Context) :
                         it.getString(it.getColumnIndexOrThrow("tipolec")),
                         it.getString(it.getColumnIndexOrThrow("tipolecman")),
                         it.getString(it.getColumnIndexOrThrow("sed")),
+                        it.getString(it.getColumnIndexOrThrow("ubicacion")),
+                        it.getString(it.getColumnIndexOrThrow("perfilCarga")),
                         )
                     operacionList.add(operacion)
                 } while (it.moveToNext())
@@ -507,6 +576,8 @@ LEFT JOIN (
                     it.getString(it.getColumnIndexOrThrow("tipolec")),
                     it.getString(it.getColumnIndexOrThrow("tipolecman")),
                     it.getString(it.getColumnIndexOrThrow("sed")),
+                    it.getString(it.getColumnIndexOrThrow("ubicacion")),
+                    it.getString(it.getColumnIndexOrThrow("perfilCarga")),
                     )
             } else null
         }
@@ -557,14 +628,16 @@ LEFT JOIN (
                     it.getString(it.getColumnIndexOrThrow("tipolec")),
                     it.getString(it.getColumnIndexOrThrow("tipolecman")),
                     it.getString(it.getColumnIndexOrThrow("sed")),
+                    it.getString(it.getColumnIndexOrThrow("ubicacion")),
+                    it.getString(it.getColumnIndexOrThrow("perfilCarga")),
                     )
             } else null
         }
     }
 
-    fun search(column: String, search: String): List<Detalle> {
+    fun search( search: String): List<Detalle> {
         val operacionList = mutableListOf<Detalle>()
-        val selectQuery = "SELECT * FROM Detalle WHERE ${column} like '%${search}%'"
+        val selectQuery = "SELECT * FROM Detalle WHERE " + search
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, arrayOf())
         cursor.use {
@@ -608,6 +681,8 @@ LEFT JOIN (
                         it.getString(it.getColumnIndexOrThrow("tipolec")),
                         it.getString(it.getColumnIndexOrThrow("tipolecman")),
                         it.getString(it.getColumnIndexOrThrow("sed")),
+                        it.getString(it.getColumnIndexOrThrow("ubicacion")),
+                        it.getString(it.getColumnIndexOrThrow("perfilCarga")),
                         )
                     operacionList.add(operacion)
                 } while (it.moveToNext())
@@ -653,7 +728,10 @@ LEFT JOIN (
         erc: String,
 
         tipolec: String,
-        tipolecman: String
+        tipolecman: String,
+
+        ubicacion: String,
+        perfilCarga: String
 
     ): Int {
         val db = this.writableDatabase
@@ -682,6 +760,9 @@ LEFT JOIN (
 
             put("tipolec", tipolec)
             put("tipolecman", tipolecman)
+
+            put("ubicacion", ubicacion)
+            put("perfilCarga", perfilCarga)
         }
         return db.update("Detalle", values, "id = ?", arrayOf(id.toString()))
     }

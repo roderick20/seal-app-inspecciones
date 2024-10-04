@@ -56,7 +56,12 @@ data class Detalle(
     val tipolec: String,
     val tipolecman: String,
 
-    val sed: String
+    val sed: String,
+
+    val ubicacion: String,
+    val perfilCarga: String
+
+
 )
 
 
@@ -93,6 +98,12 @@ interface GrabarGrabarApi {
         @Query("eahfpc") eahfpc: String,
         @Query("mdhfpc") mdhfpc: String,
         @Query("erc") erc: String,
+
+        @Query("tipolec") tipolec: String,
+        @Query("tipolecman") tipolecman: String,
+
+        @Query("ubicacion") ubicacion: String,
+        @Query("perfilcarga") perfilcarga: String,
     ):  String
 
 }

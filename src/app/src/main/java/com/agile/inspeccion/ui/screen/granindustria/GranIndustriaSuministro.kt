@@ -1,9 +1,11 @@
 package com.agile.inspeccion.ui.screen.granindustria
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
@@ -111,6 +113,7 @@ import com.agile.inspeccion.data.model.DetalleImagen
 import com.agile.inspeccion.data.model.SuministroModel
 import com.agile.inspeccion.ui.screen.CameraCapture
 import com.agile.inspeccion.ui.screen.inspeccion.ObservacionOption
+import com.agile.inspeccion.ui.screen.inspeccion.ResizedImage
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.MapView
@@ -176,6 +179,7 @@ fun CameraScreenDialog(onPhotoTaken: (Bitmap) -> Unit, onDismiss: () -> Unit) {
     }
 }
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SuministroScreen(
@@ -242,10 +246,6 @@ fun SuministroScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    viewModel.GetDetalleById(detalle!!.id)
-
-    //viewModel.setReset(viewModel.detalle.value.reset)
-
     val recordVideoLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.CaptureVideo(),
             onResult = { success ->
@@ -257,6 +257,39 @@ fun SuministroScreen(
     var videoUri by remember {
         mutableStateOf<Uri?>(null)
     }
+
+    //viewModel.GetDetalleById(detalle!!.id)
+
+    //viewModel.setReset(detalle.value?.reset ?: "")
+    //viewModel.setReset(viewModel.detalle.value?.reset ?: "")
+    LaunchedEffect(key1 = id) {
+        reset = viewModel.detalle.value?.reset ?: ""
+        mdhfpa = viewModel.detalle.value?.mdhfpa ?: ""
+        eatp = viewModel.detalle.value?.eatp ?: ""
+        eahpp = viewModel.detalle.value?.eahpp ?: ""
+        mdhpp = viewModel.detalle.value?.mdhpp ?: ""
+        mdhpa = viewModel.detalle.value?.mdhpa ?: ""
+        eahfpp = viewModel.detalle.value?.eahfpp ?: ""
+        mdhfpp = viewModel.detalle.value?.mdhfpp ?: ""
+        erp = viewModel.detalle.value?.erp ?: ""
+        eatc = viewModel.detalle.value?.eatc ?: ""
+        eahpc = viewModel.detalle.value?.eahpc ?: ""
+        mdhpc = viewModel.detalle.value?.mdhpc ?: ""
+        eahfpc = viewModel.detalle.value?.eahfpc ?: ""
+        mdhfpc = viewModel.detalle.value?.mdhfpc ?: ""
+        erc = viewModel.detalle.value?.erc ?: ""
+
+        for (item in viewModel.fotos.value!!) {
+            val photo = DetalleImagen(
+                BitmapFactory.decodeByteArray(item.foto, 0, item.foto.size),
+                item.tipo
+            )
+            viewModel.agregarImagen(photo)
+        }
+
+        videoUri = Uri.parse(viewModel.video)
+    }
+
 
     var buttonEnabledFotoLectura by remember { mutableStateOf(false) }
     var buttonEnabledFotoPanoramica by remember { mutableStateOf(false) }
@@ -277,6 +310,8 @@ fun SuministroScreen(
     var expandedPerfilCarga by remember { mutableStateOf(false) }
     var selectedOptionPerfilCarga by remember { mutableStateOf("Si") }
     val optionsPerfilCarga = listOf("Si", "No")
+
+
 
     BackHandler {
         coroutineScope.launch {
@@ -449,11 +484,18 @@ fun SuministroScreen(
     var localCapturedImage by remember { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(capturedImage) {
-        if (capturedImage != null) {
+        var capturedImage2 = capturedImage?.let { ResizedImage(it, 806, 604) }
+        if (capturedImage2 != null) {
             val processedBitmap = if (fotoTipo == 1) {
-                processImage90(capturedImage, detalle!!.contrato.toString())
+                com.agile.inspeccion.ui.screen.inspeccion.processImage90(
+                    capturedImage2,
+                    detalle!!.contrato.toString()
+                )
             } else {
-                processImage(capturedImage, detalle!!.contrato.toString())
+                com.agile.inspeccion.ui.screen.inspeccion.processImage(
+                    capturedImage2,
+                    detalle!!.contrato.toString()
+                )
             }
 
             val photo = DetalleImagen(processedBitmap, fotoTipo)
@@ -607,7 +649,6 @@ fun SuministroScreen(
                                 viewModel.setObservacion(0)
 
 
-
                             },
                             modifier = Modifier
                                 .height(height = 32.dp)
@@ -640,7 +681,7 @@ fun SuministroScreen(
                         expanded = expandedUbicacion,
                         onExpandedChange = { expandedUbicacion = it },
                         selectedOption = selectedOptionUbicacion,
-                        options = optionsTipoLectura,
+                        options = optionsUbicacion,
                         onOptionSelected = { selectedOptionUbicacion = it },
                         label = "Ubicación"
                     )
@@ -648,7 +689,7 @@ fun SuministroScreen(
                         expanded = expandedPerfilCarga,
                         onExpandedChange = { expandedPerfilCarga = it },
                         selectedOption = selectedOptionPerfilCarga,
-                        options = optionsTipoLectura,
+                        options = optionsPerfilCarga,
                         onOptionSelected = { selectedOptionPerfilCarga = it },
                         label = "Perfil de carga"
                     )
@@ -728,7 +769,7 @@ fun SuministroScreen(
                             onValueChange = {
                                 reset = it
                                 viewModel.setReset(it)
-                                            },
+                            },
                             label = { Text("04-Contador de Reset") },
                             singleLine = true,
                             enabled = reset_enable,
@@ -748,7 +789,8 @@ fun SuministroScreen(
                             value = eatp,
                             onValueChange = {
                                 eatp = it
-                                viewModel.setEatp(it) },
+                                viewModel.setEatp(it)
+                            },
                             label = { Text("05-Energia Activa Total Presente (kWh)") },
                             singleLine = true,
                             enabled = reset_enable,
@@ -769,7 +811,8 @@ fun SuministroScreen(
                             value = eahpp,
                             onValueChange = {
                                 eahpp = it
-                                viewModel.setEahpp(it) },
+                                viewModel.setEahpp(it)
+                            },
                             label = { Text("06-Energia Activa en Horas Punta Presente (kWh)") },
                             singleLine = true,
                             enabled = eahpp_enable,
@@ -790,7 +833,8 @@ fun SuministroScreen(
                             value = mdhpp,
                             onValueChange = {
                                 mdhpp = it
-                                viewModel.setMdhpp(it) },
+                                viewModel.setMdhpp(it)
+                            },
                             label = { Text("07-Maxima Demanda en Horas Punta Presene (kW)") },
                             singleLine = true,
                             enabled = mdhpp_enable,
@@ -811,7 +855,8 @@ fun SuministroScreen(
                             value = mdhpa,
                             onValueChange = {
                                 mdhpa = it
-                                viewModel.setMdhpa(it) },
+                                viewModel.setMdhpa(it)
+                            },
                             label = { Text("08-Maxima Demanda en Horas Punta Acumulada (kW)") },
                             singleLine = true,
                             enabled = mdhpa_enable,
@@ -832,7 +877,8 @@ fun SuministroScreen(
                             value = eahfpp,
                             onValueChange = {
                                 eahfpp = it
-                                viewModel.setEahfpp(it) },
+                                viewModel.setEahfpp(it)
+                            },
                             label = { Text("09-Energia Activa en Horas Fuera de Punta Presente (kWh)") },
                             singleLine = true,
                             enabled = eahfpp_enable,
@@ -853,7 +899,8 @@ fun SuministroScreen(
                             value = mdhfpp,
                             onValueChange = {
                                 mdhfpp = it
-                                viewModel.setMdhfpp(it) },
+                                viewModel.setMdhfpp(it)
+                            },
                             label = { Text("10-Maxima Demanda en Horas Fuera de Punta Presene (kW)") },
                             singleLine = true,
                             enabled = mdhfpp_enable,
@@ -873,7 +920,8 @@ fun SuministroScreen(
                             value = mdhfpa,
                             onValueChange = {
                                 mdhfpa = it
-                                viewModel.setMdhfpa(it) },
+                                viewModel.setMdhfpa(it)
+                            },
                             label = { Text("11-Maxima Demanda en Horas Fuera de Punta Acumulada (kW)") },
                             singleLine = true,
                             enabled = mdhfpa_enable,
@@ -893,7 +941,8 @@ fun SuministroScreen(
                             value = erp,
                             onValueChange = {
                                 erp = it
-                                viewModel.setErp(it) },
+                                viewModel.setErp(it)
+                            },
                             label = { Text("12-Energia Reactiva Presenta(kVarh)") },
                             singleLine = true,
                             enabled = erp_enable,
@@ -913,7 +962,8 @@ fun SuministroScreen(
                             value = eatc,
                             onValueChange = {
                                 eatc = it
-                                viewModel.setEatc(it) },
+                                viewModel.setEatc(it)
+                            },
                             label = { Text("13-Energia Activa Total Congelada (kWh)") },
                             singleLine = true,
                             enabled = eatc_enable,
@@ -933,7 +983,8 @@ fun SuministroScreen(
                             value = eahpc,
                             onValueChange = {
                                 eahpc = it
-                                viewModel.setEahpc(it) },
+                                viewModel.setEahpc(it)
+                            },
                             label = { Text("14-Energia Activa en Horas Punta Congelada (kWh)") },
                             singleLine = true,
                             enabled = eahpc_enable,
@@ -954,7 +1005,8 @@ fun SuministroScreen(
                             value = mdhpc,
                             onValueChange = {
                                 mdhpc = it
-                                viewModel.setMdhpc(it) },
+                                viewModel.setMdhpc(it)
+                            },
                             label = { Text("15-Maxima Demanda en Horas Punta Congelada (kW)") },
                             singleLine = true,
                             enabled = mdhpc_enable,
@@ -975,7 +1027,8 @@ fun SuministroScreen(
                             value = eahfpc,
                             onValueChange = {
                                 eahfpc = it
-                                viewModel.setEahfpc(it) },
+                                viewModel.setEahfpc(it)
+                            },
                             label = { Text("16-Energia Activa en Horas Fuera de Punta Congelada (kWh)") },
                             singleLine = true,
                             enabled = eahfpc_enable,
@@ -996,7 +1049,8 @@ fun SuministroScreen(
                             value = mdhfpc,
                             onValueChange = {
                                 mdhfpc = it
-                                viewModel.setMdhfpc(it) },
+                                viewModel.setMdhfpc(it)
+                            },
                             label = { Text("17-Maxima Demanda en Horas Fuera de Punta Congelada (kW)") },
                             singleLine = true,
                             enabled = mdhfpc_enable,
@@ -1017,7 +1071,8 @@ fun SuministroScreen(
                             value = erc,
                             onValueChange = {
                                 erc = it
-                                viewModel.setErc(it) },
+                                viewModel.setErc(it)
+                            },
                             label = { Text("18-Energia Reactiva Congelada(kVarh)") },
                             singleLine = true,
                             enabled = erc_enable,
@@ -1040,7 +1095,8 @@ fun SuministroScreen(
                             value = reset,
                             onValueChange = {
                                 reset = it
-                                viewModel.setReset(it) },
+                                viewModel.setReset(it)
+                            },
                             label = { Text("0.1.0-Contador de Reset") },
                             singleLine = true,
                             enabled = reset_enable,
@@ -1061,7 +1117,8 @@ fun SuministroScreen(
                             value = eatp,
                             onValueChange = {
                                 eatp = it
-                                viewModel.setEatp(it) },
+                                viewModel.setEatp(it)
+                            },
                             label = { Text("1.8.0-Energia Activa Total Presente (kWh)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1081,7 +1138,8 @@ fun SuministroScreen(
                             value = eatc,
                             onValueChange = {
                                 eatc = it
-                                viewModel.setEatc(it) },
+                                viewModel.setEatc(it)
+                            },
                             label = { Text("1.8.0.XX-Energia Activa Total Congelada (kWh)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1102,7 +1160,8 @@ fun SuministroScreen(
                             value = eahpp,
                             onValueChange = {
                                 eahpp = it
-                                viewModel.setEahpp(it) },
+                                viewModel.setEahpp(it)
+                            },
                             label = { Text("1.8.2-Energia Activa en Horas Punta Presente (kWh)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1122,7 +1181,8 @@ fun SuministroScreen(
                             value = eahpc,
                             onValueChange = {
                                 eahpc = it
-                                viewModel.setEahpc(it) },
+                                viewModel.setEahpc(it)
+                            },
                             label = { Text("1.8.2.XX-Energia Activa en Horas Punta Congelada (kWh)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1142,7 +1202,8 @@ fun SuministroScreen(
                             value = mdhpp,
                             onValueChange = {
                                 mdhpp = it
-                                viewModel.setMdhpp(it) },
+                                viewModel.setMdhpp(it)
+                            },
                             label = { Text("1.6.2-Maxima Demanda en Horas Punta Presene (kW)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1162,7 +1223,8 @@ fun SuministroScreen(
                             value = mdhpc,
                             onValueChange = {
                                 mdhpc = it
-                                viewModel.setMdhpc(it) },
+                                viewModel.setMdhpc(it)
+                            },
                             label = { Text("1.6.2.XX-Maxima Demanda en Horas Punta Congelada (kW)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1182,7 +1244,8 @@ fun SuministroScreen(
                             value = mdhpa,
                             onValueChange = {
                                 mdhpa = it
-                                viewModel.setMdhpa(it) },
+                                viewModel.setMdhpa(it)
+                            },
                             label = { Text("1.2.2-Maxima Demanda en Horas Punta Acumulada (kW)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1202,7 +1265,8 @@ fun SuministroScreen(
                             value = eahfpp,
                             onValueChange = {
                                 eahfpp = it
-                                viewModel.setEahfpp(it) },
+                                viewModel.setEahfpp(it)
+                            },
                             label = { Text("1.8.1-Energia Activa en Horas Fuera de Punta Presente (kWh)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1222,7 +1286,8 @@ fun SuministroScreen(
                             value = eahfpc,
                             onValueChange = {
                                 eahfpc = it
-                                viewModel.setEahfpc(it) },
+                                viewModel.setEahfpc(it)
+                            },
                             label = { Text("1.8.1.XX-Energia Activa en Horas Fuera de Punta Congelada (kWh)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1242,7 +1307,8 @@ fun SuministroScreen(
                             value = mdhfpp,
                             onValueChange = {
                                 mdhfpp = it
-                                viewModel.setMdhfpp(it) },
+                                viewModel.setMdhfpp(it)
+                            },
                             label = { Text("1.6.1-Maxima Demanda en Horas Fuera de Punta Presene (kW)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1262,7 +1328,8 @@ fun SuministroScreen(
                             value = mdhfpc,
                             onValueChange = {
                                 mdhfpc = it
-                                viewModel.setMdhpc(it) },
+                                viewModel.setMdhpc(it)
+                            },
                             label = { Text("1.6.1.XX-Maxima Demanda en Horas Fuera de Punta Congelada (kW)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1282,7 +1349,8 @@ fun SuministroScreen(
                             value = mdhfpa,
                             onValueChange = {
                                 mdhfpa = it
-                                viewModel.setMdhfpa(it) },
+                                viewModel.setMdhfpa(it)
+                            },
                             label = { Text("1.2.1-Maxima Demanda en Horas Fuera de Punta Acumulada (kW)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1301,7 +1369,8 @@ fun SuministroScreen(
                             value = erp,
                             onValueChange = {
                                 erp = it
-                                viewModel.setErp(it) },
+                                viewModel.setErp(it)
+                            },
                             label = { Text("3.8.0-Energia Reactiva Presenta(kVarh)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1321,7 +1390,8 @@ fun SuministroScreen(
                             value = erc,
                             onValueChange = {
                                 erc = it
-                                viewModel.setErc(it) },
+                                viewModel.setErc(it)
+                            },
                             label = { Text("3.8.0.XX-Energia Reactiva Congelada(kVarh)") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
@@ -1538,7 +1608,10 @@ fun SuministroScreen(
                                 mdhfpc,
                                 erc,
                                 selectedOptionTipoLectura,
-                                selectedOptionTipoMedidor
+                                selectedOptionTipoMedidor,
+
+                                selectedOptionUbicacion,
+                                selectedOptionPerfilCarga
                             )
 
                             viewModel.GetDetalleById(detalle!!.id)
@@ -1548,7 +1621,7 @@ fun SuministroScreen(
                             viewModel.imagenesCapturadas.forEach {
                                 viewModel.addImage(it.foto, detalle!!.id, it.tipo)
                             }
-                            if (videoUri != null) {
+                            if (videoUri != null && videoUri.toString() != "") {
                                 viewModel.addVideo(detalle!!.id, videoUri.toString())
 
                                 val mimeType =
@@ -1586,6 +1659,18 @@ fun SuministroScreen(
                                 viewModel.SaveDetalle(detalle)
                                 viewModel.DetalleEnviado(detalle.uniqueId)
                             }
+
+                            var fotos = viewModel.GetFotoNoEnviado()
+                            for (foto in fotos) {
+                                viewModel.SaveFoto(foto)
+//                                if (error == "") {
+//                                    viewModel.DetalleFotoEnviado(foto.id)
+//                                } else {
+//                                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+//                                }
+                            }
+
+
                             Toast.makeText(context, "Lectura grabada", Toast.LENGTH_SHORT).show()
                             var siguiente = viewModel.siguiente(detalle!!.id)
                             if (siguiente != null) {
@@ -1682,22 +1767,22 @@ fun SuministroScreen(
                             viewModel.setObservacion(id)
 
                             val optionset = observacionOptions.first { it.id == id }
-                            if(optionset.requiereLectura == 0 || optionset.id == 6){
+                            if (optionset.requiereLectura == 0 || optionset.id == 6) {
                                 reset = ""
-                                mdhfpa  = ""
-                                eatp  = ""
-                                eahpp  = ""
-                                mdhpp  = ""
-                                mdhpa  = ""
-                                eahfpp  = ""
-                                mdhfpp  = ""
+                                mdhfpa = ""
+                                eatp = ""
+                                eahpp = ""
+                                mdhpp = ""
+                                mdhpa = ""
+                                eahfpp = ""
+                                mdhfpp = ""
                                 erp = ""
-                                eatc  = ""
-                                eahpc  = ""
-                                mdhpc  = ""
-                                eahfpc  = ""
-                                mdhfpc  = ""
-                                erc  = ""
+                                eatc = ""
+                                eahpc = ""
+                                mdhpc = ""
+                                eahfpc = ""
+                                mdhfpc = ""
+                                erc = ""
 
                                 reset_enable = false
                                 mdhfpa_enable = false
@@ -1714,9 +1799,7 @@ fun SuministroScreen(
                                 eahfpc_enable = false
                                 mdhfpc_enable = false
                                 erc_enable = false
-                            }
-
-                            else{
+                            } else {
                                 reset_enable = true
                                 mdhfpa_enable = true
                                 eatp_enable = true

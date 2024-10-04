@@ -189,7 +189,9 @@ class GruposViewModel(private val databaseHelper: DatabaseHelper, tipo: String) 
                     detalle.mdhpc,
                     detalle.eahfpc,
                     detalle.mdhfpc,
-                    detalle.erc
+                    detalle.erc,
+                    detalle.tipolec,
+                    detalle.tipolecman, detalle.ubicacion, detalle.perfilCarga
                 )
             } catch (e: Exception) {
                 var error = "Error: ${e.message}"

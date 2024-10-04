@@ -35,17 +35,26 @@ class SuministroModel (private val databaseHelper: DatabaseHelper, private val i
     private val _detalle = MutableStateFlow<Detalle?>(null)
     val detalle = _detalle.asStateFlow()
 
+    private val _fotos = MutableStateFlow<List<Foto>?>(null)
+    val fotos = _fotos.asStateFlow()
+
+    var video: String = ""
     init {
         GetDetalleById(id)
     }
 
-    private val _fotoTipo = MutableStateFlow<Int>(0)
+    private  var _fotoTipo = MutableStateFlow<Int>(0)
     val fotoTipo = _fotoTipo.asStateFlow()
     fun setFotoTipo(fotoTipo: Int) {
         _fotoTipo.value = fotoTipo
     }
 
 
+    /*private val _video = MutableStateFlow<String>("")
+    val video = _video.asStateFlow()
+    fun setVideo(lectura: String) {
+        _video.value = lectura
+    }*/
 
     private val _lectura = MutableStateFlow<String>("")
     val lectura = _lectura.asStateFlow()
@@ -161,22 +170,27 @@ class SuministroModel (private val databaseHelper: DatabaseHelper, private val i
             try {
                 _detalle.value = databaseHelper.getDetalleById(inspeccionId)
 
-                _reset.value = _detalle.value?.reset ?: ""
-                _mdhfpa.value = _detalle.value?.mdhfpa ?: ""
-                _eatp.value = _detalle.value?.eatp ?: ""
-                _eahpp.value = _detalle.value?.eahpp ?: ""
-                _mdhpp.value = _detalle.value?.mdhpp ?: ""
-                _mdhpa.value = _detalle.value?.mdhpa ?: ""
-                _eahfpp.value = _detalle.value?.eahfpp ?: ""
-                _mdhfpp.value = _detalle.value?.mdhfpp ?: ""
-                _erp.value = _detalle.value?.erp ?: ""
-                _eatc.value = _detalle.value?.eatc ?: ""
-                _eahpc.value = _detalle.value?.eahpc ?: ""
-                _mdhpc.value = _detalle.value?.mdhpc ?: ""
-                _eahfpc.value = _detalle.value?.eahfpc ?: ""
-                _mdhfpc.value = _detalle.value?.mdhfpc ?: ""
-                _erc.value = _detalle.value?.erc ?: ""
-                _observacion.value = _detalle.value?.observacion ?: 0
+                _fotos.value = databaseHelper.getFotoDetalle(inspeccionId)
+
+                video = databaseHelper.getVideoDetalle(inspeccionId)
+
+
+//                _reset.value = _detalle.value?.reset ?: ""
+//                _mdhfpa.value = _detalle.value?.mdhfpa ?: ""
+//                _eatp.value = _detalle.value?.eatp ?: ""
+//                _eahpp.value = _detalle.value?.eahpp ?: ""
+//                _mdhpp.value = _detalle.value?.mdhpp ?: ""
+//                _mdhpa.value = _detalle.value?.mdhpa ?: ""
+//                _eahfpp.value = _detalle.value?.eahfpp ?: ""
+//                _mdhfpp.value = _detalle.value?.mdhfpp ?: ""
+//                _erp.value = _detalle.value?.erp ?: ""
+//                _eatc.value = _detalle.value?.eatc ?: ""
+//                _eahpc.value = _detalle.value?.eahpc ?: ""
+//                _mdhpc.value = _detalle.value?.mdhpc ?: ""
+//                _eahfpc.value = _detalle.value?.eahfpc ?: ""
+//                _mdhfpc.value = _detalle.value?.mdhfpc ?: ""
+//                _erc.value = _detalle.value?.erc ?: ""
+//                _observacion.value = _detalle.value?.observacion ?: 0
 
 
             } catch (e: Exception) {
@@ -236,7 +250,9 @@ class SuministroModel (private val databaseHelper: DatabaseHelper, private val i
                     detalle.mdhpc,
                     detalle.eahfpc,
                     detalle.mdhfpc,
-                    detalle.erc)
+                    detalle.erc,
+                    detalle.tipolec,
+                    detalle.tipolecman, detalle.ubicacion, detalle.perfilCarga)
             } catch (e: Exception) {
                 var error = "Error: ${e.message}"
             } finally {
@@ -316,7 +332,9 @@ class SuministroModel (private val databaseHelper: DatabaseHelper, private val i
                       mdhfpc: String,
                       erc: String,
                       tipolec: String,
-    tipolecman: String) {
+                        tipolecman: String,
+                      ubicacion: String,
+                      perfilCarga: String) {
         databaseHelper.updateDetalle(id, lectura, observacion, latitudSave, longitudSave, fechaSave,reset,
             mdhfpa,
             eatp,
@@ -333,7 +351,9 @@ class SuministroModel (private val databaseHelper: DatabaseHelper, private val i
             mdhfpc,
             erc,
             tipolec,
-            tipolecman)
+            tipolecman,
+            ubicacion,
+            perfilCarga)
     }
 
     fun addImage(foto: Bitmap, detalleid: Int, tipo: Int){
@@ -346,5 +366,22 @@ class SuministroModel (private val databaseHelper: DatabaseHelper, private val i
 
     fun siguiente(id: Int): Detalle? {
         return databaseHelper.getSiguiente( id )
+    }
+
+    fun SaveFoto(foto: Foto) {
+        //_error.value = ""
+        viewModelScope.launch {
+            //var file = Base64.encodeToString(foto.foto, Base64.NO_WRAP);
+            try {
+                RetrofitClient.uploadFile(foto )
+
+            } catch (e: Exception) {
+                //_error.value = "Error: ${e.message}"
+            } finally {
+                //_isLoading.value = false
+            }
+
+        }
+
     }
 }

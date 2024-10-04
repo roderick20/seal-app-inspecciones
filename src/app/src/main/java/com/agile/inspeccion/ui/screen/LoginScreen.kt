@@ -45,11 +45,11 @@ fun LoginScreen(navController: NavController) {
     val context = LocalContext.current
     val sharedPreferences = remember { context.getSharedPreferences("MyPrefsSealInspecciones", Context.MODE_PRIVATE) }
 
-//    var username by remember { mutableStateOf(sharedPreferences.getString("username", "") ?: "") }
-//    var password by remember { mutableStateOf(sharedPreferences.getString("password", "") ?: "") }
+    var username by remember { mutableStateOf(sharedPreferences.getString("username", "") ?: "") }
+    var password by remember { mutableStateOf(sharedPreferences.getString("password", "") ?: "") }
 
-    var username by remember { mutableStateOf( "rquicaña") }
-    var password by remember { mutableStateOf( "44142556") }
+//    var username by remember { mutableStateOf( "rquicaña") }
+//    var password by remember { mutableStateOf( "44142556") }
 
 
     var rememberPassword by remember { mutableStateOf(false) }
