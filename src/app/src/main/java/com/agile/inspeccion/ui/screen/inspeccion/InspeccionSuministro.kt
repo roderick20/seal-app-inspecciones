@@ -101,6 +101,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityCompat
 import com.agile.inspeccion.ui.screen.CameraCapture
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+
+//import kotlinx.coroutines.tasks.await
 
 data class ObservacionOption(
     val id: Int,
@@ -196,6 +199,8 @@ fun SuministroScreen(
             // Implement other methods if needed
         }
     }
+
+    //var ubicacionActual by remember { mutableStateOf<LatLng?>(null) }
     LaunchedEffect(true) {
         if (true) {
             if (ActivityCompat.checkSelfPermission(
@@ -209,11 +214,19 @@ fun SuministroScreen(
                     0f,
                     locationListener
                 )
+
+//                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+//                val location = fusedLocationClient.lastLocation.await()
+//                ubicacionActual = LatLng(location.latitude, location.longitude)
             }
         } else {
             locationManager.removeUpdates(locationListener)
         }
     }
+
+
+
+
 //--------------------------------------------------------------------------------------------------
     var showMapDialog by remember { mutableStateOf(false) }
 
@@ -753,18 +766,53 @@ fun SuministroScreen(
                     ) {
                         AndroidView(
                             factory = { context ->
+
+                                when {
+                                    ContextCompat.checkSelfPermission(
+                                        context,
+                                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                                    ) == PackageManager.PERMISSION_GRANTED -> {
+                                        getLocation( fusedLocationClient) { location ->
+                                            latitude = location.latitude
+                                            longitude = location.longitude
+                                        }
+                                    }
+                                    else -> {
+                                        //requestPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                                    }
+                                }
+
                                 MapView(context).apply {
                                     onCreate(null)
                                     getMapAsync { googleMap ->
-                                        val location = LatLng(detalle!!.latitud, detalle!!.longitud)
+                                        val location2 = LatLng(detalle!!.latitud, detalle!!.longitud)
                                         googleMap.moveCamera(
                                             CameraUpdateFactory.newLatLngZoom(
-                                                location,
+                                                location2,
                                                 15f
                                             )
                                         )
-                                        googleMap.addMarker(MarkerOptions().position(location))
-                                    }
+                                        googleMap.addMarker(MarkerOptions().position(location2))
+
+
+
+                                    val location1 = LatLng(
+                                        latitude ?: 0.0,
+                                        longitude ?: 0.0
+                                    )
+
+                                    val coloredMarker = googleMap.addMarker(
+                                        MarkerOptions()
+                                            .position(location1)
+                                            .title("Marcador de color")
+                                            .icon(
+                                                BitmapDescriptorFactory.defaultMarker(
+                                                    BitmapDescriptorFactory.HUE_BLUE
+                                                )
+                                            )
+                                    )
+                                }
+
                                 }
                             },
                             modifier = Modifier.fillMaxSize()
@@ -828,7 +876,7 @@ fun processImage90(bitmap: Bitmap, suministro: String): Bitmap {
     val dateTime = dateFormat.format(Date())
     val x = mutableBitmap.width - 20f
     val y = mutableBitmap.height - 20f
-    canvas.drawText(suministro + "    " + dateTime, x, y, paint)
+    canvas.drawText("IN "+suministro + "    " + dateTime, x, y, paint)
     return mutableBitmap
 }
 

@@ -1,6 +1,0 @@
-<resources>
-    <string name="app_name">Inspeccion</string>
-    <string name="title_activity_login">Gestión Comercial</string>
-    <string name="title_activity_list">ListActivity</string>
-    <string name="title_activity_suministro">SuministroActivity</string>
-</resources>

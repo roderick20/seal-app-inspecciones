@@ -422,8 +422,7 @@ fun InspeccionLista(navController: NavController, inspeccion: Int, viewModel: Li
                                     onCreate(null)
                                     getMapAsync { googleMap ->
                                         detalles.forEach { detalle ->
-                                            val location =
-                                                LatLng(detalle!!.latitud, detalle!!.longitud)
+                                            val location = LatLng(detalle!!.latitud, detalle!!.longitud)
                                             googleMap.moveCamera(
                                                 CameraUpdateFactory.newLatLngZoom(
                                                     location, 15f

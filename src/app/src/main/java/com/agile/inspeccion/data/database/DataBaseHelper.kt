@@ -43,15 +43,15 @@ data class Video(
 class DatabaseHelper(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
-        private const val DATABASE_NAME = "seal18.db"
-        private const val DATABASE_VERSION = 18
+        private const val DATABASE_NAME = "seal19.db"
+        private const val DATABASE_VERSION = 19
     }
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """
             CREATE TABLE grupo (
-                inspeccion INTEGER,
+                inspeccion INTEGER PRIMARY KEY,
                 tecnicoId INTEGER,
                 cantidad INTEGER,
                 tipo String
@@ -63,7 +63,7 @@ class DatabaseHelper(context: Context) :
         db.execSQL(
             """
             CREATE TABLE detalle (
-                id INTEGER,
+                id INTEGER ,
                 uniqueId TEXT,
                 contrato INTEGER,
                 medidor TEXT,
